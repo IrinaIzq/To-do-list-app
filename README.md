@@ -63,16 +63,24 @@ todo-list-app/
    cd todo-list-app
 
 2. **Create a virtual environment (recommended)**
+   ```bash
    python -m venv venv
    source venv/bin/activate   # Mac/Linux
    venv\Scripts\activate      # Windows
 
-3. **Install dependencies**
+4. **Install dependencies**
+   ```bash
    pip install -r requirements.txt
 
-4. **Run the backend**
+6. **Run the backend**
+   ```bash
    python backend/app.py
 
-5. **Open the frontend**
+8. **Open the frontend**
    Open frontend/index.html directly in your browser. The frontend will communicate with the Flask backend.
-   
+  
+---
+
+## Requirements
+- Python 3.10+
+- pip 
