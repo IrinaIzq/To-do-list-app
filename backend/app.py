@@ -1,13 +1,19 @@
 from flask import Flask
+from models import db
 
-# Create Flask application
 app = Flask(__name__)
 
-# Test route
+# Configure SQLite database
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tasks.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db.init_app(app)
+
 @app.route("/")
 def home():
-    return "Hello, To-Do App! Your backend is running 🚀"
+    return "Hello, To-Do App! Database is ready"
 
-# Run the app
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()  # creates tables if not exist
     app.run(debug=True)
