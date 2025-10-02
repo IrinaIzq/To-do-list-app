@@ -4,7 +4,7 @@ from utils import generate_token, token_required
 
 routes = Blueprint("routes", __name__)
 
-# AUTHENTICATION ROUTES
+# Authentication routes
 @routes.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
@@ -30,7 +30,7 @@ def login():
     return jsonify({"error": "Invalid credentials"}), 401
 
 
-# CATEGORY ROUTES
+# Category routes
 @routes.route("/categories", methods=["GET"])
 @token_required
 def get_categories(current_user_id):
@@ -53,7 +53,7 @@ def create_category(current_user_id):
     return jsonify({"id": category.id, "name": category.name, "description": category.description}), 201
 
 
-# TASK ROUTES
+# Task routes
 @routes.route("/tasks", methods=["GET"])
 @token_required
 def get_tasks(current_user_id):
