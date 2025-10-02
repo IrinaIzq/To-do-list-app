@@ -1,49 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>To-Do List App</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <title>To-Do Manager App</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>To-Do List App ✅</h1>
+  <h1 class="app-title">To-Do Manager App</h1>
 
-    <!-- Auth Section -->
-    <section id="auth">
-        <h2>Authentication</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="register()">Register</button>
-        <button onclick="login()">Login</button>
-        <button onclick="logout()">Logout</button>
-    </section>
+  <!-- Auth Section -->
+  <div id="auth-section">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+  </div>
 
-    <!-- Category Section -->
-    <section id="categories">
-        <h2>Categories</h2>
-        <input type="text" id="categoryName" placeholder="Category Name">
-        <input type="text" id="categoryDescription" placeholder="Category Description">
-        <button onclick="createCategory()">Add Category</button>
-        <ul id="categoryList"></ul>
-    </section>
+  <!-- Hidden until login -->
+  <div id="main-section" style="display: none;">
+    <!-- Categories -->
+    <div>
+      <h2>Create Category</h2>
+      <input type="text" id="categoryName" placeholder="Category Name">
+      <input type="text" id="categoryDesc" placeholder="Description">
+      <button onclick="createCategory()">Add Category</button>
+    </div>
 
-    <!-- Task Section -->
-    <section id="tasks">
-        <h2>Tasks</h2>
-        <input type="text" id="taskTitle" placeholder="Task Title">
-        <input type="text" id="taskDescription" placeholder="Task Description">
-        <input type="text" id="taskCategory" placeholder="Category (will auto-create)">
-        <input type="number" id="taskHours" placeholder="Estimated Hours">
-        <input type="date" id="taskDueDate">
-        <select id="taskPriority">
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="high">High</option>
-        </select>
-        <button onclick="createTask()">Add Task</button>
-        <ul id="taskList"></ul>
-    </section>
+    <!-- Tasks -->
+    <div>
+      <h2>Create Task</h2>
+      <input type="text" id="taskTitle" placeholder="Task Title">
+      <input type="text" id="taskDesc" placeholder="Task Description">
+      <input type="text" id="taskCategory" placeholder="Category">
+      <button onclick="createTask()">Add Task</button>
+    </div>
 
-    <script src="scripts.js"></script>
+    <!-- Lists -->
+    <div>
+      <h2>Categories</h2>
+      <ul id="categoriesList"></ul>
+    </div>
+
+    <div>
+      <h2>Tasks</h2>
+      <ul id="tasksList"></ul>
+    </div>
+  </div>
+
+  <script src="scripts.js"></script>
 </body>
 </html>
