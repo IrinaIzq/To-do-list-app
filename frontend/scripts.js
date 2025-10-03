@@ -20,7 +20,7 @@ async function login() {
     loadCategories();
     loadTasks();
   } else {
-    alert(data.message || "Login failed");
+    alert(data.error || "Login failed");
   }
 }
 
@@ -38,7 +38,7 @@ async function register() {
   if (res.ok) {
     alert("User registered! Now log in.");
   } else {
-    alert(data.message || "Registration failed");
+    alert(data.error || "Registration failed");
   }
 }
 
@@ -46,6 +46,11 @@ async function register() {
 async function createCategory() {
   const name = document.getElementById("categoryName").value;
   const description = document.getElementById("categoryDesc").value;
+
+  if (!name) {
+    alert("Category name is required");
+    return;
+  }
 
   const res = await fetch(`${API_URL}/categories`, {
     method: "POST",
@@ -58,9 +63,11 @@ async function createCategory() {
 
   const data = await res.json();
   if (res.ok) {
+    document.getElementById("categoryName").value = "";
+    document.getElementById("categoryDesc").value = "";
     loadCategories();
   } else {
-    alert(data.message || "Error creating category");
+    alert(data.error || "Error creating category");
   }
 }
 
@@ -73,7 +80,7 @@ async function loadCategories() {
   list.innerHTML = "";
   categories.forEach(c => {
     const li = document.createElement("li");
-    li.textContent = `${c.name}: ${c.description}`;
+    li.textContent = `${c.name}: ${c.description || 'No description'}`;
     list.appendChild(li);
   });
 }
@@ -82,7 +89,12 @@ async function loadCategories() {
 async function createTask() {
   const title = document.getElementById("taskTitle").value;
   const description = document.getElementById("taskDesc").value;
-  const category = document.getElementById("taskCategory").value;
+  const category_name = document.getElementById("taskCategory").value;
+
+  if (!title) {
+    alert("Task title is required");
+    return;
+  }
 
   const res = await fetch(`${API_URL}/tasks`, {
     method: "POST",
@@ -90,14 +102,17 @@ async function createTask() {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({ title, description, category })
+    body: JSON.stringify({ title, description, category_name })
   });
 
   const data = await res.json();
   if (res.ok) {
+    document.getElementById("taskTitle").value = "";
+    document.getElementById("taskDesc").value = "";
+    document.getElementById("taskCategory").value = "";
     loadTasks();
   } else {
-    alert(data.message || "Error creating task");
+    alert(data.error || "Error creating task");
   }
 }
 
@@ -110,7 +125,7 @@ async function loadTasks() {
   list.innerHTML = "";
   tasks.forEach(t => {
     const li = document.createElement("li");
-    li.textContent = `${t.title} (${t.category}) - ${t.description}`;
+    li.textContent = `${t.title} ${t.category ? '(' + t.category + ')' : ''} - ${t.description || 'No description'} - Status: ${t.status}`;
     list.appendChild(li);
   });
 }
