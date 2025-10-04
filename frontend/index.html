@@ -13,38 +13,76 @@
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Register</button>
+    <button type="button" onclick="login(); return false;">Login</button>
+    <button type="button" onclick="register(); return false;">Register</button>
   </div>
 
   <!-- Hidden until login -->
   <div id="main-section" style="display: none;">
+    <button type="button" onclick="logout(); return false;" class="logout-btn">Logout</button>
+    
     <!-- Categories -->
-    <div>
+    <div class="section">
       <h2>Create Category</h2>
       <input type="text" id="categoryName" placeholder="Category Name">
       <input type="text" id="categoryDesc" placeholder="Description">
-      <button onclick="createCategory()">Add Category</button>
+      <button type="button" onclick="createCategory(); return false;">Add Category</button>
     </div>
 
     <!-- Tasks -->
-    <div>
+    <div class="section">
       <h2>Create Task</h2>
-      <input type="text" id="taskTitle" placeholder="Task Title">
-      <input type="text" id="taskDesc" placeholder="Task Description">
-      <input type="text" id="taskCategory" placeholder="Category">
-      <button onclick="createTask()">Add Task</button>
+      <input type="text" id="taskTitle" placeholder="Task Title *">
+      <textarea id="taskDesc" placeholder="Task Description"></textarea>
+      <input type="text" id="taskCategory" placeholder="Category * (required)">
+      <input type="date" id="taskDueDate" placeholder="Due Date">
+      <input type="number" id="taskEstimatedHours" placeholder="Estimated Hours" step="0.5" min="0">
+      <select id="taskPriority">
+        <option value="">Priority (optional)</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+      <button type="button" onclick="createTask(); return false;">Add Task</button>
     </div>
 
     <!-- Lists -->
-    <div>
+    <div class="section">
       <h2>Categories</h2>
       <ul id="categoriesList"></ul>
     </div>
 
-    <div>
+    <div class="section">
       <h2>Tasks</h2>
+      <div class="task-info-text">Tasks ordered by: Due Date → Priority (High → Medium → Low) → Estimated Hours (High → Low)</div>
       <ul id="tasksList"></ul>
+    </div>
+  </div>
+
+  <!-- Modal para editar tarea -->
+  <div id="editModal" class="modal" style="display: none;" onclick="if(event.target === this) { closeEditModal(); return false; }">
+    <div class="modal-content" onclick="event.stopPropagation();">
+      <span class="close" onclick="closeEditModal(); return false;">&times;</span>
+      <h2>Edit Task</h2>
+      <input type="hidden" id="editTaskId">
+      <input type="text" id="editTaskTitle" placeholder="Task Title *">
+      <textarea id="editTaskDesc" placeholder="Task Description"></textarea>
+      <input type="text" id="editTaskCategory" placeholder="Category * (required)">
+      <input type="date" id="editTaskDueDate">
+      <input type="number" id="editTaskEstimatedHours" placeholder="Estimated Hours" step="0.5" min="0">
+      <select id="editTaskPriority">
+        <option value="">Priority</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+      <select id="editTaskStatus">
+        <option value="Pending">Pending</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <button type="button" onclick="saveTask(); return false;">Save Changes</button>
+      <button type="button" onclick="closeEditModal(); return false;">Cancel</button>
     </div>
   </div>
 

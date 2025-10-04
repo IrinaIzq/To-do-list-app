@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from database import db, Task, Category, User
 from utils import generate_token, token_required
+from sqlalchemy import case
 
 routes = Blueprint("routes", __name__)
 
@@ -60,7 +61,7 @@ def update_category(current_user_id, category_id):
     
     if data.get("name"):
         category.name = data["name"]
-    if data.get("description"):
+    if data.get("description") is not None:
         category.description = data["description"]
     
     db.session.commit()
@@ -79,7 +80,21 @@ def delete_category(current_user_id, category_id):
 @routes.route("/tasks", methods=["GET"])
 @token_required
 def get_tasks(current_user_id):
-    tasks = Task.query.all()
+    # Definir el orden de prioridad: High=1, Medium=2, Low=3, None=4
+    priority_order = case(
+        (Task.priority == "High", 1),
+        (Task.priority == "Medium", 2),
+        (Task.priority == "Low", 3),
+        else_=4
+    )
+    
+    # Ordenar por: due_date (nulls last), priority, estimated_hours (desc)
+    tasks = Task.query.order_by(
+        Task.due_date.asc().nullslast(),
+        priority_order,
+        Task.estimated_hours.desc().nullslast()
+    ).all()
+    
     return jsonify([{
         "id": t.id,
         "title": t.title,
@@ -115,6 +130,10 @@ def create_task(current_user_id):
     if not data.get("title"):
         return jsonify({"error": "Task title is required"}), 400
 
+    # Category is now REQUIRED
+    if not data.get("category_name") and not data.get("category_id"):
+        return jsonify({"error": "Category is required"}), 400
+
     # Check if category exists by name or id
     category = None
     if data.get("category_name"):
@@ -125,6 +144,8 @@ def create_task(current_user_id):
             db.session.commit()
     elif data.get("category_id"):
         category = Category.query.get(data["category_id"])
+        if not category:
+            return jsonify({"error": "Category not found"}), 404
 
     task = Task(
         title=data["title"],
@@ -133,7 +154,7 @@ def create_task(current_user_id):
         due_date=data.get("due_date"),
         priority=data.get("priority"),
         status=data.get("status", "Pending"),
-        category_id=category.id if category else None
+        category_id=category.id
     )
     db.session.add(task)
     db.session.commit()
@@ -147,21 +168,23 @@ def update_task(current_user_id, task_id):
     
     if data.get("title"):
         task.title = data["title"]
-    if data.get("description"):
+    if data.get("description") is not None:
         task.description = data["description"]
     if data.get("status"):
         task.status = data["status"]
-    if data.get("estimated_hours"):
+    if data.get("estimated_hours") is not None:
         task.estimated_hours = data["estimated_hours"]
-    if data.get("due_date"):
+    if data.get("due_date") is not None:
         task.due_date = data["due_date"]
-    if data.get("priority"):
+    if data.get("priority") is not None:
         task.priority = data["priority"]
     if data.get("category_name"):
         category = Category.query.filter_by(name=data["category_name"]).first()
         if category:
             task.category_id = category.id
-    elif data.get("category_id"):
+    elif "category_id" in data:
+        if data["category_id"] is None:
+            return jsonify({"error": "Category is required"}), 400
         task.category_id = data["category_id"]
     
     db.session.commit()
