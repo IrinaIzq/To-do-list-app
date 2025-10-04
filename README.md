@@ -45,7 +45,7 @@ todo-list-app/
 │
 ├── docs/                   # Documentation
 │   ├── schema.png         # UML/architecture diagram
-│   └── report.md          # Report text
+│   └── report.pdf          # Report text
 │
 ├── tests/                  # Automated tests
 │   └── test_tasks.py      # Unit tests
