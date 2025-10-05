@@ -88,7 +88,7 @@ def get_tasks(current_user_id):
         else_=4
     )
     
-    # Ordenar por: due_date (nulls last), priority, estimated_hours (desc)
+    # Order by: due_date (nulls last), priority, estimated_hours (desc)
     tasks = Task.query.order_by(
         Task.due_date.asc().nullslast(),
         priority_order,
@@ -130,11 +130,9 @@ def create_task(current_user_id):
     if not data.get("title"):
         return jsonify({"error": "Task title is required"}), 400
 
-    # Category is now REQUIRED
     if not data.get("category_name") and not data.get("category_id"):
         return jsonify({"error": "Category is required"}), 400
 
-    # Check if category exists by name or id
     category = None
     if data.get("category_name"):
         category = Category.query.filter_by(name=data["category_name"]).first()

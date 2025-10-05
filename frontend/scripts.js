@@ -1,17 +1,14 @@
 const API_URL = "http://127.0.0.1:5000";
 let token = null;
 
-// Detectar si la página se está recargando
 window.addEventListener('beforeunload', function(e) {
   console.error("⚠️ PAGE IS RELOADING!");
   console.trace();
 });
 
-// Prevenir cualquier recarga de página
 window.addEventListener('load', function() {
   console.log("✅ Page loaded successfully");
   
-  // Prevenir submit en todos los formularios
   document.addEventListener('submit', function(e) {
     console.error("⚠️ Form submit detected - PREVENTED");
     e.preventDefault();
@@ -19,7 +16,6 @@ window.addEventListener('load', function() {
     return false;
   });
   
-  // Prevenir Enter en inputs
   document.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
       console.log("Enter key prevented on input");
@@ -29,7 +25,7 @@ window.addEventListener('load', function() {
   });
 });
 
-// ---------- AUTH ----------
+// AUTHENTICATION
 async function login() {
   console.log("🔑 Login function called");
   const username = document.getElementById("username").value;
@@ -90,7 +86,7 @@ function logout() {
   document.getElementById("password").value = "";
 }
 
-// ---------- CATEGORIES ----------
+// CATEGORIES 
 async function createCategory() {
   console.log("📁 Create category function called");
   const name = document.getElementById("categoryName").value;
@@ -158,7 +154,7 @@ async function loadCategories() {
   }
 }
 
-// ---------- TASKS ----------
+// TASKS
 async function createTask() {
   console.log("📝 Create task function called");
   const title = document.getElementById("taskTitle").value.trim();
@@ -371,7 +367,7 @@ async function deleteTask(taskId) {
   }
 }
 
-// ---------- EDIT MODAL ----------
+// EDIT MODAL
 function openEditModal(task) {
   console.log("✎ Open edit modal for task:", task.id);
   document.getElementById("editTaskId").value = task.id;

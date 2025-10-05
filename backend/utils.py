@@ -3,7 +3,7 @@ import datetime
 from flask import request, jsonify
 from functools import wraps
 
-SECRET_KEY = "mysecretkey"  # ⚠️ cámbialo en producción
+SECRET_KEY = "mysecretkey" 
 
 def generate_token(user_id):
     payload = {
