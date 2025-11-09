@@ -3,7 +3,7 @@ Category service following Single Responsibility Principle.
 Handles all category-related business logic.
 """
 from typing import List, Optional, Dict, Any
-from database import db, Category
+from backend.database import db, Category
 
 
 class CategoryNotFoundError(Exception):

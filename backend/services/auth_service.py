@@ -6,7 +6,7 @@ import jwt
 import datetime
 from typing import Optional, Tuple
 from werkzeug.security import generate_password_hash, check_password_hash
-from database import db, User
+from backend.database import db, User
 
 
 class AuthenticationError(Exception):

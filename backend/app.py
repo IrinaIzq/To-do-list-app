@@ -7,12 +7,12 @@ from prometheus_flask_exporter import PrometheusMetrics
 import logging
 from datetime import datetime
 
-from database import db
-from config import get_config
-from routes import create_routes
-from services.auth_service import AuthService
-from services.task_service import TaskService
-from services.category_service import CategoryService
+from backend.database import db
+from backend.config import get_config
+from backend.routes import create_routes
+from backend.services.auth_service import AuthService
+from backend.services.task_service import TaskService
+from backend.services.category_service import CategoryService
 
 
 def create_app(config_name='development'):

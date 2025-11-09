@@ -5,11 +5,11 @@ from flask import Blueprint, request, jsonify
 from functools import wraps
 from typing import Callable
 
-from services.auth_service import AuthService, AuthenticationError
-from services.task_service import (
+from backend.services.auth_service import AuthService, AuthenticationError
+from backend.services.task_service import (
     TaskService, TaskNotFoundError, TaskValidationError
 )
-from services.category_service import (
+from backend.services.category_service import (
     CategoryService, CategoryNotFoundError, CategoryValidationError
 )
 

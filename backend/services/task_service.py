@@ -4,7 +4,7 @@ Handles all task-related business logic with proper error handling.
 """
 from typing import List, Optional, Dict, Any
 from sqlalchemy import case
-from database import db, Task, Category
+from backend.database import db, Task, Category
 
 
 class TaskNotFoundError(Exception):
