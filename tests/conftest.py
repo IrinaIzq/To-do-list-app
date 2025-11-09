@@ -70,9 +70,10 @@ def test_user(app, auth_service):
     with app.app_context():
         user = auth_service.register_user(username, password)
         db.session.commit()
+        user_id = user.id  # Store ID inside context
     
     return {
-        'id': user.id,
+        'id': user_id,
         'username': username,
         'password': password
     }
@@ -100,7 +101,16 @@ def test_category(app, category_service):
             'description': 'Test description'
         })
         db.session.commit()
-        return category
+        category_id = category.id
+        category_name = category.name
+    
+    # Return a simple object with the data
+    class CategoryData:
+        def __init__(self, id, name):
+            self.id = id
+            self.name = name
+    
+    return CategoryData(category_id, category_name)
 
 
 @pytest.fixture(scope='function')
@@ -115,40 +125,52 @@ def test_task(app, task_service, category_service, test_category):
             'estimated_hours': 5.0
         }, category_service)
         db.session.commit()
-        return task
+        task_id = task.id
+        task_title = task.title
+    
+    # Return a simple object
+    class TaskData:
+        def __init__(self, id, title):
+            self.id = id
+            self.title = title
+    
+    return TaskData(task_id, task_title)
 
 
 @pytest.fixture(scope='function')
 def multiple_tasks(app, task_service, category_service, test_category):
     """Create multiple test tasks with different priorities."""
-    tasks = []
     with app.app_context():
         # High priority task
-        tasks.append(task_service.create_task({
+        task1 = task_service.create_task({
             'title': 'High Priority Task',
             'category_id': test_category.id,
             'priority': 'High',
             'due_date': '2025-12-01',
             'estimated_hours': 10.0
-        }, category_service))
+        }, category_service)
         
         # Medium priority task
-        tasks.append(task_service.create_task({
+        task2 = task_service.create_task({
             'title': 'Medium Priority Task',
             'category_id': test_category.id,
             'priority': 'Medium',
             'due_date': '2025-12-01',
             'estimated_hours': 5.0
-        }, category_service))
+        }, category_service)
         
         # Low priority task
-        tasks.append(task_service.create_task({
+        task3 = task_service.create_task({
             'title': 'Low Priority Task',
             'category_id': test_category.id,
             'priority': 'Low',
             'due_date': '2025-12-15',
             'estimated_hours': 2.0
-        }, category_service))
+        }, category_service)
         
         db.session.commit()
-        return tasks
+        
+        # Store IDs inside context
+        task_ids = [task1.id, task2.id, task3.id]
+    
+    return task_ids

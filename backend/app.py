@@ -15,6 +15,8 @@ from backend.services.task_service import TaskService
 from backend.services.category_service import CategoryService
 
 
+# backend/app.py
+
 def create_app(config_name='development'):
     """
     Application factory pattern for creating Flask app.
@@ -35,12 +37,15 @@ def create_app(config_name='development'):
     db.init_app(app)
     CORS(app, origins=app.config['CORS_ORIGINS'])
     
-    # Initialize Prometheus metrics
-    metrics = PrometheusMetrics(app)
-    
-    # Add custom metrics
-    metrics.info('app_info', 'Application info', 
-                version=app.config['APP_VERSION'])
+    # Initialize Prometheus metrics ONLY if not testing
+    if not app.config.get('TESTING', False):
+        try:
+            metrics = PrometheusMetrics(app)
+            # Add custom metrics
+            metrics.info('app_info', 'Application info', 
+                        version=app.config['APP_VERSION'])
+        except Exception as e:
+            app.logger.warning(f'Failed to initialize Prometheus metrics: {e}')
     
     # Initialize services
     auth_service = AuthService(
