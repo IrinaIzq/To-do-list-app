@@ -15,8 +15,6 @@ from backend.services.task_service import TaskService
 from backend.services.category_service import CategoryService
 
 
-# backend/app.py
-
 def create_app(config_name='development'):
     """
     Application factory pattern for creating Flask app.
