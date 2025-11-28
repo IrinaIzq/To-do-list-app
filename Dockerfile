@@ -1,22 +1,35 @@
-# Base image
-FROM python:3.10-slim
+# Stage 1: Base Python image
+FROM python:3.10-slim AS base
 
-# Environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-# Install dependencies
+# Install system dependencies
+RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first
 COPY requirements.txt .
+
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code only
-COPY backend/ ./backend/
+# Stage 2 — Final application image
+FROM base AS final
 
-# Expose the port Azure expects
-EXPOSE 8000
+WORKDIR /app
 
-# Use Gunicorn for production
-CMD ["gunicorn", "-b", "0.0.0.0:80", "wsgi:app"]
+# Copy backend and frontend
+COPY backend ./backend
+COPY frontend ./frontend
 
+# Ensure backend is treated as a Python module
+RUN touch backend/__init__.py
+
+# Expose port 80 for Azure
+EXPOSE 80
+
+# Start the app using Gunicorn
+CMD ["gunicorn", "-b", "0.0.0.0:80", "backend.wsgy:app"]
