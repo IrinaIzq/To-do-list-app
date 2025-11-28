@@ -42,7 +42,7 @@ jobs:
 
       - name: Build backend image
         run: |
-          docker build -t irinaizqregistry.azurecr.io/todo-backend:latest ./backend
+          docker build -t irinaizqregistry.azurecr.io/todo-backend:latest .
 
       - name: Push image
         run: |
