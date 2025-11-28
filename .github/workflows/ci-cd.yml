@@ -34,21 +34,24 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-            }
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: .
-
-      - name: Run post-deployment health check
+      - name: Login to ACR
         run: |
-          sleep 60
-          curl -I https://irinaizq-todo-app-a4hhfkfnf5gadjhx.westeurope-01.azurewebsites.net
+          az acr login --name irinaizqregistry
+
+      - name: Build backend image
+        run: |
+          docker build -t irinaizqregistry.azurecr.io/todo-backend:latest ./backend
+
+      - name: Push image
+        run: |
+          docker push irinaizqregistry.azurecr.io/todo-backend:latest
+
+      - name: Deploy container to Azure Web App
+        run: |
+          az webapp config container set \
+            --resource-group BCSAI2025-DEVOPS-STUDENTS-A \
+            --name irinaizq-todo-app \
+            --docker-custom-image-name irinaizqregistry.azurecr.io/todo-backend:latest \
+            --docker-registry-server-url https://irinaizqregistry.azurecr.io
