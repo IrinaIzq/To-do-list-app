@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  AZURE_WEBAPP_NAME: irinaizq-todo-app 
+  AZURE_WEBAPP_NAME: irinaizq-todo-app-docker
   PYTHON_VERSION: '3.10'
 
 jobs:
@@ -58,6 +58,6 @@ jobs:
         run: |
           az webapp config container set \
             --resource-group BCSAI2025-DEVOPS-STUDENTS-A \
-            --name irinaizq-todo-app \
+            --name irinaizq-todo-app-docker \
             --docker-custom-image-name irinaizqregistry.azurecr.io/todo-backend:latest \
             --docker-registry-server-url https://irinaizqregistry.azurecr.io
