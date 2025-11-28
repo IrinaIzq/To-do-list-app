@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  AZURE_WEBAPP_NAME: todo-app-yourname  # Change this!
+  AZURE_WEBAPP_NAME: irinaizq-todo-app  # Change this!
   PYTHON_VERSION: '3.10'
 
 jobs:
