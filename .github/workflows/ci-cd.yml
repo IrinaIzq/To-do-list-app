@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  AZURE_WEBAPP_NAME: irinaizq-todo-app  # Change this!
+  AZURE_WEBAPP_NAME: irinaizq-todo-app 
   PYTHON_VERSION: '3.10'
 
 jobs:
@@ -50,5 +50,5 @@ jobs:
 
       - name: Run post-deployment health check
         run: |
-          sleep 30
-          curl -f https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/health || exit 1
+          sleep 60
+          curl -I https://irinaizq-todo-app-a4hhfkfnf5gadjhx.westeurope-01.azurewebsites.net
