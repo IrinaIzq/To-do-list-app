@@ -23,6 +23,14 @@ def create_app(config_name=None):
     CORS(app, origins="*")
     init_models()
 
+    # Create database tables
+    with app.app_context():
+        try:
+            db.create_all()
+            print("✓ Database tables created successfully")
+        except Exception as e:
+            print(f"✗ Error creating database tables: {e}")
+
     # Create services
     auth_service = AuthService(
         secret_key=app.config["SECRET_KEY"],
@@ -36,20 +44,22 @@ def create_app(config_name=None):
     app.register_blueprint(create_routes(auth_service, task_service, category_service))
 
     # Static file route
-    @app.get("/")
+    @app.route("/")
     def index():
         return send_from_directory("../frontend", "index.html")
 
     # Health check route
-    @app.get("/health")
+    @app.route("/health")
     def health():
         try:
             db.session.execute(text("SELECT 1"))
             db_status = "healthy"
+            status = "healthy"
         except Exception as e:
-            db_status = str(e)
+            db_status = f"degraded: {str(e)}"
+            status = "degraded"
         return {
-            "status": "ok",
+            "status": status,
             "database": db_status,
             "version": app.config["APP_VERSION"]
         }
@@ -60,6 +70,4 @@ def create_app(config_name=None):
 # Only run when executing this file directly (not during imports/tests)
 if __name__ == "__main__":
     app = create_app()
-    with app.app_context():
-        db.create_all()
-    app.run(port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
