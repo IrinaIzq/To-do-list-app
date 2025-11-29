@@ -1,248 +1,264 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>To-Do Manager</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    
-    .container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      padding: 40px;
-      max-width: 800px;
-      width: 100%;
-    }
-    
-    h1 {
-      color: #667eea;
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2.5em;
-    }
-    
-    h2 {
-      color: #333;
-      margin-bottom: 20px;
-      font-size: 1.5em;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 5px;
-      color: #555;
-      font-weight: 500;
-    }
-    
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: border-color 0.3s;
-    }
-    
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    button {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 12px 30px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      margin-right: 10px;
-    }
-    
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-    
-    button:active {
-      transform: translateY(0);
-    }
-    
-    .link-button {
-      background: none;
-      color: #667eea;
-      text-decoration: underline;
-      padding: 5px;
-      margin-top: 10px;
-      display: inline-block;
-    }
-    
-    .hidden {
-      display: none;
-    }
-    
-    #tasksList {
-      list-style: none;
-      margin-top: 20px;
-    }
-    
-    .task-item {
-      background: #f8f9fa;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      border-left: 4px solid #667eea;
-    }
-    
-    .task-item strong {
-      display: block;
-      margin-bottom: 5px;
-      color: #333;
-    }
-    
-    .task-item span {
-      display: inline-block;
-      margin-right: 15px;
-      font-size: 14px;
-      color: #666;
-    }
-    
-    .section {
-      margin-bottom: 30px;
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 10px;
-    }
-    
-    .auth-section {
-      max-width: 400px;
-      margin: 0 auto;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .link {
+            text-align: center;
+            margin-top: 15px;
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .hidden {
+            display: none;
+        }
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>To-Do Manager App</h1>
-    
-    <!-- Authentication Section -->
-    <div id="authSection" class="auth-section">
-      <!-- Login Form -->
-      <div id="loginForm">
-        <h2>Login</h2>
-        <div class="form-group">
-          <label for="loginUsername">Username</label>
-          <input type="text" id="loginUsername" placeholder="Enter username">
+    <div class="container">
+        <h1>📝 To-Do Manager</h1>
+        
+        <div id="message"></div>
+        
+        <!-- Login Form -->
+        <div id="loginSection">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password">
+            </div>
+            <button onclick="login()">Login</button>
+            <div class="link" onclick="showRegister()">Don't have an account? Register here</div>
         </div>
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" placeholder="Enter password">
+        
+        <!-- Register Form -->
+        <div id="registerSection" class="hidden">
+            <h2>Register</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="registerUsername" placeholder="Choose a username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="registerPassword" placeholder="Choose a password (min 6 chars)">
+            </div>
+            <button onclick="register()">Register</button>
+            <div class="link" onclick="showLogin()">Already have an account? Login here</div>
         </div>
-        <button id="loginBtn">Login</button>
-        <button id="showRegister" class="link-button">Don't have an account? Register</button>
-      </div>
-      
-      <!-- Register Form -->
-      <div id="registerForm" class="hidden">
-        <h2>Register</h2>
-        <div class="form-group">
-          <label for="registerUsername">Username</label>
-          <input type="text" id="registerUsername" placeholder="Choose username">
+        
+        <!-- Main App -->
+        <div id="appSection" class="hidden">
+            <h2>Welcome!</h2>
+            <p style="text-align: center; margin: 20px 0;">You are logged in successfully! ✅</p>
+            <button onclick="logout()">Logout</button>
         </div>
-        <div class="form-group">
-          <label for="registerPassword">Password</label>
-          <input type="password" id="registerPassword" placeholder="Choose password (min 6 chars)">
-        </div>
-        <button id="registerBtn">Register</button>
-        <button id="showLogin" class="link-button">Already have an account? Login</button>
-      </div>
     </div>
-    
-    <!-- Main App Section -->
-    <div id="mainApp" class="hidden">
-      <button id="logoutBtn" style="float: right;">Logout</button>
-      <div style="clear: both;"></div>
-      
-      <!-- Create Category Section -->
-      <div class="section">
-        <h2>Create Category</h2>
-        <div class="form-group">
-          <label for="categoryName">Category Name</label>
-          <input type="text" id="categoryName" placeholder="e.g., Work, Personal">
-        </div>
-        <div class="form-group">
-          <label for="categoryDescription">Description</label>
-          <input type="text" id="categoryDescription" placeholder="Optional description">
-        </div>
-        <button id="createCategoryBtn">Create Category</button>
-      </div>
-      
-      <!-- Create Task Section -->
-      <div class="section">
-        <h2>Create Task</h2>
-        <div class="form-group">
-          <label for="taskTitle">Title</label>
-          <input type="text" id="taskTitle" placeholder="Task title">
-        </div>
-        <div class="form-group">
-          <label for="taskDescription">Description</label>
-          <textarea id="taskDescription" placeholder="Task description" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="taskCategory">Category</label>
-          <select id="taskCategory">
-            <option value="">Select category...</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="taskPriority">Priority</label>
-          <select id="taskPriority">
-            <option value="High">High</option>
-            <option value="Medium" selected>Medium</option>
-            <option value="Low">Low</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="taskHours">Estimated Hours</label>
-          <input type="number" id="taskHours" placeholder="0" min="0" step="0.5">
-        </div>
-        <div class="form-group">
-          <label for="taskDueDate">Due Date</label>
-          <input type="date" id="taskDueDate">
-        </div>
-        <button id="createTaskBtn">Create Task</button>
-      </div>
-      
-      <!-- Tasks List -->
-      <div class="section">
-        <h2>Your Tasks</h2>
-        <ul id="tasksList"></ul>
-      </div>
-    </div>
-  </div>
-  
-  <script src="scripts.js"></script>
+
+    <script>
+        let token = null;
+
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'message ' + type;
+            messageDiv.textContent = msg;
+            setTimeout(() => {
+                messageDiv.className = '';
+                messageDiv.textContent = '';
+            }, 3000);
+        }
+
+        function showLogin() {
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('appSection').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.remove('hidden');
+            document.getElementById('appSection').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('appSection').classList.remove('hidden');
+        }
+
+        async function register() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+
+            if (!username || !password) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Registration successful! Please login.', 'success');
+                    setTimeout(() => showLogin(), 1500);
+                } else {
+                    showMessage(data.error || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    token = data.token;
+                    showMessage('Login successful!', 'success');
+                    setTimeout(() => showApp(), 1000);
+                } else {
+                    showMessage(data.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+
+        function logout() {
+            token = null;
+            showMessage('Logged out successfully', 'success');
+            setTimeout(() => showLogin(), 1000);
+        }
+
+        // Check backend health on load
+        window.onload = async function() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                console.log('Backend health:', data);
+            } catch (error) {
+                showMessage('Cannot connect to backend', 'error');
+            }
+        }
+    </script>
 </body>
 </html>
