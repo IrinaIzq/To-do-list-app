@@ -5,3 +5,4 @@ pytest
 pytest-cov
 gunicorn
 prometheus_flask_exporter
+flask_sqlalchemy
