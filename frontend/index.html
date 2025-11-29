@@ -119,9 +119,19 @@
         .task-item {
             background: #f8f9fa;
             padding: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             border-radius: 8px;
             border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+        .task-item.completed {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+            opacity: 0.8;
+        }
+        .task-item.in-progress {
+            background: #fff3e0;
+            border-left-color: #ff9800;
         }
         .task-item strong {
             display: block;
@@ -129,11 +139,68 @@
             color: #333;
             font-size: 16px;
         }
-        .task-item span {
+        .task-item.completed strong {
+            text-decoration: line-through;
+            color: #666;
+        }
+        .task-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .task-info span {
             display: inline-block;
-            margin-right: 15px;
             font-size: 13px;
             color: #666;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .task-actions button {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 13px;
+            margin: 0;
+            flex: 1;
+        }
+        .btn-start {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+        .btn-complete {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        }
+        .btn-pending {
+            background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
+        }
+        .btn-delete {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            flex: 0.5;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            background: #e0e0e0;
+            color: #616161;
+        }
+        .status-in-progress {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status-completed {
+            background: #e8f5e9;
+            color: #388e3c;
         }
         .section {
             margin-bottom: 30px;
@@ -148,16 +215,6 @@
             font-size: 14px;
             margin-bottom: 20px;
         }
-        .debug-info {
-            background: #f0f0f0;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-size: 12px;
-            color: #666;
-            max-height: 150px;
-            overflow-y: auto;
-        }
     </style>
 </head>
 <body>
@@ -165,7 +222,6 @@
         <h1>📝 To-Do Manager</h1>
         
         <div id="message"></div>
-        <div id="debugInfo" class="debug-info hidden"></div>
         
         <!-- Login Form -->
         <div id="loginSection">
@@ -264,16 +320,6 @@
 
     <script>
         let token = null;
-        let debugMode = false; // Set to true to see debug info
-
-        function debug(msg) {
-            if (debugMode) {
-                console.log(msg);
-                const debugDiv = document.getElementById('debugInfo');
-                debugDiv.classList.remove('hidden');
-                debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + msg + '<br>';
-            }
-        }
 
         function showMessage(msg, type, isApp = false) {
             const messageDiv = document.getElementById(isApp ? 'appMessage' : 'message');
@@ -324,13 +370,8 @@
             btn.disabled = true;
             btn.textContent = 'Registering...';
 
-            debug('Attempting to register user: ' + username);
-
             try {
-                const url = window.location.origin + '/register';
-                debug('POST to: ' + url);
-
-                const response = await fetch(url, {
+                const response = await fetch(window.location.origin + '/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -339,20 +380,7 @@
                     body: JSON.stringify({ username, password })
                 });
 
-                debug('Response status: ' + response.status);
-                
-                const contentType = response.headers.get('content-type');
-                debug('Response content-type: ' + contentType);
-
-                let data;
-                if (contentType && contentType.includes('application/json')) {
-                    data = await response.json();
-                    debug('Response data: ' + JSON.stringify(data));
-                } else {
-                    const text = await response.text();
-                    debug('Response text (not JSON): ' + text.substring(0, 200));
-                    throw new Error('Server returned HTML instead of JSON. Check backend logs.');
-                }
+                const data = await response.json();
 
                 if (response.ok) {
                     showMessage('Registration successful! Please login.', 'success');
@@ -364,7 +392,6 @@
                 }
             } catch (error) {
                 console.error('Registration error:', error);
-                debug('Error: ' + error.message);
                 showMessage('Network error: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
@@ -385,13 +412,8 @@
             btn.disabled = true;
             btn.textContent = 'Logging in...';
 
-            debug('Attempting to login user: ' + username);
-
             try {
-                const url = window.location.origin + '/login';
-                debug('POST to: ' + url);
-
-                const response = await fetch(url, {
+                const response = await fetch(window.location.origin + '/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -400,24 +422,10 @@
                     body: JSON.stringify({ username, password })
                 });
 
-                debug('Response status: ' + response.status);
-
-                const contentType = response.headers.get('content-type');
-                debug('Response content-type: ' + contentType);
-
-                let data;
-                if (contentType && contentType.includes('application/json')) {
-                    data = await response.json();
-                    debug('Response data: ' + JSON.stringify(data));
-                } else {
-                    const text = await response.text();
-                    debug('Response text (not JSON): ' + text.substring(0, 200));
-                    throw new Error('Server returned HTML instead of JSON. Check backend logs.');
-                }
+                const data = await response.json();
 
                 if (response.ok && data.token) {
                     token = data.token;
-                    debug('Token received: ' + token.substring(0, 20) + '...');
                     showMessage('Login successful!', 'success');
                     document.getElementById('loginUsername').value = '';
                     document.getElementById('loginPassword').value = '';
@@ -427,7 +435,6 @@
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                debug('Error: ' + error.message);
                 showMessage('Network error: ' + error.message, 'error');
             } finally {
                 btn.disabled = false;
@@ -442,19 +449,14 @@
         }
 
         async function loadCategories() {
-            debug('Loading categories...');
             try {
                 const response = await fetch(window.location.origin + '/categories', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!response.ok) {
-                    debug('Failed to load categories: ' + response.status);
-                    return;
-                }
+                if (!response.ok) return;
 
                 const categories = await response.json();
-                debug('Categories loaded: ' + categories.length);
                 
                 const select = document.getElementById('taskCategory');
                 select.innerHTML = '<option value="">Select category...</option>';
@@ -467,7 +469,6 @@
                 });
             } catch (error) {
                 console.error('Error loading categories:', error);
-                debug('Error loading categories: ' + error.message);
             }
         }
 
@@ -479,8 +480,6 @@
                 showMessage('Please enter a category name', 'error', true);
                 return;
             }
-
-            debug('Creating category: ' + name);
 
             try {
                 const response = await fetch(window.location.origin + '/categories', {
@@ -509,19 +508,14 @@
         }
 
         async function loadTasks() {
-            debug('Loading tasks...');
             try {
                 const response = await fetch(window.location.origin + '/tasks', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!response.ok) {
-                    debug('Failed to load tasks: ' + response.status);
-                    return;
-                }
+                if (!response.ok) return;
 
                 const tasks = await response.json();
-                debug('Tasks loaded: ' + tasks.length);
                 
                 const tasksList = document.getElementById('tasksList');
                 
@@ -533,19 +527,79 @@
                 tasksList.innerHTML = '';
                 tasks.forEach(task => {
                     const li = document.createElement('li');
-                    li.className = 'task-item';
+                    const status = task.status || 'Pending';
+                    const statusClass = status === 'Completed' ? 'completed' : 
+                                       status === 'In Progress' ? 'in-progress' : '';
+                    li.className = `task-item ${statusClass}`;
+                    
+                    let statusBadgeClass = 'status-pending';
+                    if (status === 'In Progress') statusBadgeClass = 'status-in-progress';
+                    if (status === 'Completed') statusBadgeClass = 'status-completed';
+                    
                     li.innerHTML = `
                         <strong>${task.title}</strong>
-                        <span>📌 ${task.priority}</span>
-                        <span>⏰ ${task.estimated_hours || task.hours || 0}h</span>
-                        <span>📊 ${task.status || 'Pending'}</span>
-                        ${task.due_date ? `<span>📅 ${task.due_date.split('T')[0]}</span>` : ''}
+                        <div class="task-info">
+                            <span class="status-badge ${statusBadgeClass}">${status}</span>
+                            <span>📌 ${task.priority}</span>
+                            <span>⏰ ${task.estimated_hours || task.hours || 0}h</span>
+                            ${task.due_date ? `<span>📅 ${task.due_date.split('T')[0]}</span>` : ''}
+                        </div>
+                        ${task.description ? `<p style="color: #666; margin: 8px 0; font-size: 14px;">${task.description}</p>` : ''}
+                        <div class="task-actions">
+                            ${status !== 'In Progress' ? `<button class="btn-start" onclick="updateTaskStatus(${task.id}, 'In Progress')">▶️ Start</button>` : ''}
+                            ${status !== 'Completed' ? `<button class="btn-complete" onclick="updateTaskStatus(${task.id}, 'Completed')">✓ Complete</button>` : ''}
+                            ${status !== 'Pending' ? `<button class="btn-pending" onclick="updateTaskStatus(${task.id}, 'Pending')">↻ Reset</button>` : ''}
+                            <button class="btn-delete" onclick="deleteTask(${task.id})">🗑️</button>
+                        </div>
                     `;
                     tasksList.appendChild(li);
                 });
             } catch (error) {
                 console.error('Error loading tasks:', error);
-                debug('Error loading tasks: ' + error.message);
+            }
+        }
+
+        async function updateTaskStatus(taskId, newStatus) {
+            try {
+                const response = await fetch(window.location.origin + `/tasks/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    showMessage(`Task marked as ${newStatus}!`, 'success', true);
+                    loadTasks();
+                } else {
+                    showMessage('Failed to update task', 'error', true);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Network error', 'error', true);
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if (!confirm('Are you sure you want to delete this task?')) return;
+
+            try {
+                const response = await fetch(window.location.origin + `/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showMessage('Task deleted!', 'success', true);
+                    loadTasks();
+                } else {
+                    showMessage('Failed to delete task', 'error', true);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Network error', 'error', true);
             }
         }
 
@@ -566,8 +620,6 @@
                 showMessage('Please select a category', 'error', true);
                 return;
             }
-
-            debug('Creating task: ' + title);
 
             try {
                 const response = await fetch(window.location.origin + '/tasks', {
@@ -606,16 +658,12 @@
 
         // Check backend health on load
         window.onload = async function() {
-            debug('Page loaded, checking backend health...');
             try {
                 const response = await fetch(window.location.origin + '/health');
                 const data = await response.json();
                 console.log('Backend health:', data);
-                debug('Backend health: ' + JSON.stringify(data));
             } catch (error) {
                 console.error('Cannot connect to backend:', error);
-                debug('Cannot connect to backend: ' + error.message);
-                showMessage('Warning: Cannot connect to backend', 'error');
             }
         }
     </script>
