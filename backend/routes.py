@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from functools import wraps
+from datetime import datetime, timezone
 
 from backend.services.auth_service import AuthService
 from backend.services.category_service import CategoryService
@@ -124,21 +125,32 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
     def create_task():
         data = request.get_json() or {}
 
-        # Tests expect this strict check
+        # FIX: Check if category_id is missing or None
         if data.get("category_id") is None:
             return jsonify({"error": "category is required"}), 400
+
+        # FIX: Convert priority from string to integer if needed
+        priority = data.get("priority")
+        if isinstance(priority, str):
+            priority_map = {"High": 1, "Medium": 2, "Low": 3}
+            priority = priority_map.get(priority, 2)
+        
+        # FIX: Ensure hours is provided and valid
+        hours = data.get("hours", data.get("estimated_hours", 0))
+        if hours is None:
+            hours = 0
 
         try:
             task = task_service.create_task(
                 request.user_id,
                 data.get("title"),
                 data.get("description"),
-                data.get("priority"),
-                data.get("hours"),
+                priority,
+                hours,
                 data.get("category_id"),
                 data.get("due_date")
             )
-            return jsonify({"id": task.id, "title": task.title}), 201
+            return jsonify({"id": task.id, "message": "Task created"}), 201
         except task_service.TaskValidationError as e:
             return jsonify({"error": str(e)}), 400
 
@@ -146,14 +158,19 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
     @require_token
     def get_tasks():
         tasks = task_service.get_tasks(request.user_id)
+        # FIX: Convert priority back to string for response
+        priority_map = {1: "High", 2: "Medium", 3: "Low"}
         return jsonify([
             {
                 "id": t.id,
                 "title": t.title,
                 "description": t.description,
-                "priority": t.priority,
+                "priority": priority_map.get(t.priority, "Medium"),
                 "hours": t.hours,
-                "category_id": t.category_id
+                "estimated_hours": t.hours,  # Add alias for compatibility
+                "category_id": t.category_id,
+                "status": t.status,
+                "due_date": t.due_date.isoformat() if t.due_date else None
             } for t in tasks
         ]), 200
 
@@ -162,13 +179,17 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
     def get_task(tid):
         try:
             t = task_service.get_task(tid)
+            priority_map = {1: "High", 2: "Medium", 3: "Low"}
             return jsonify({
                 "id": t.id,
                 "title": t.title,
                 "description": t.description,
-                "priority": t.priority,
+                "priority": priority_map.get(t.priority, "Medium"),
                 "hours": t.hours,
-                "category_id": t.category_id
+                "estimated_hours": t.hours,
+                "category_id": t.category_id,
+                "status": t.status,
+                "due_date": t.due_date.isoformat() if t.due_date else None
             }), 200
         except task_service.TaskNotFoundError:
             return jsonify({"error": "Not found"}), 404
@@ -177,6 +198,12 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
     @require_token
     def update_task(tid):
         data = request.get_json() or {}
+        
+        # FIX: Convert priority from string to integer if provided
+        if "priority" in data and isinstance(data["priority"], str):
+            priority_map = {"High": 1, "Medium": 2, "Low": 3}
+            data["priority"] = priority_map.get(data["priority"], 2)
+        
         try:
             t = task_service.update_task(tid, **data)
             return jsonify({"id": t.id, "title": t.title}), 200
@@ -197,12 +224,22 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
     # ----------------------------------------------------
     @bp.route("/health", methods=["GET"])
     def health():
-        # tests expect string "healthy" or "degraded"
+        # FIX: Add timestamp and version to match test expectations
         try:
             from backend.database import db
-            db.session.execute("SELECT 1")
-            return jsonify({"status": "healthy"}), 200
+            from sqlalchemy import text
+            db.session.execute(text("SELECT 1"))
+            db_status = "healthy"
+            status = "healthy"
         except Exception:
-            return jsonify({"status": "degraded"}), 200
+            db_status = "degraded"
+            status = "degraded"
+        
+        return jsonify({
+            "status": status,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "version": "2.0.0",
+            "database": db_status
+        }), 200
 
-    return bp   # ⬅⬅⬅ CRUCIAL — si falta o se mueve, Flask peta
+    return bp

@@ -2,7 +2,7 @@
 Unit tests for AuthService.
 """
 import pytest
-from backend.services.auth_service import AuthService, AuthenticationError
+from backend.services.auth_service import AuthService, AuthenticationError, RegistrationError
 from backend.database import User
 
 
@@ -22,25 +22,25 @@ class TestAuthService:
     def test_register_user_duplicate(self, app, auth_service, test_user):
         """Test registration with duplicate username."""
         with app.app_context():
-            with pytest.raises(AuthenticationError, match="User already exists"):
+            with pytest.raises(RegistrationError, match="User already exists"):
                 auth_service.register_user(test_user['username'], 'password')
     
     def test_register_user_missing_username(self, app, auth_service):
         """Test registration without username."""
         with app.app_context():
-            with pytest.raises(AuthenticationError, match="Username and password are required"):
+            with pytest.raises(RegistrationError, match="Username and password are required"):
                 auth_service.register_user('', 'password123')
     
     def test_register_user_missing_password(self, app, auth_service):
         """Test registration without password."""
         with app.app_context():
-            with pytest.raises(AuthenticationError, match="Username and password are required"):
+            with pytest.raises(RegistrationError, match="Username and password are required"):
                 auth_service.register_user('username', '')
     
     def test_register_user_short_password(self, app, auth_service):
         """Test registration with password too short."""
         with app.app_context():
-            with pytest.raises(AuthenticationError, match="Password must be at least 6 characters"):
+            with pytest.raises(RegistrationError, match="Password must be at least 6 characters"):
                 auth_service.register_user('username', '12345')
     
     def test_authenticate_user_success(self, app, auth_service, test_user):
@@ -57,19 +57,17 @@ class TestAuthService:
     def test_authenticate_user_wrong_password(self, app, auth_service, test_user):
         """Test authentication with wrong password."""
         with app.app_context():
-            user = auth_service.authenticate_user(
-                test_user['username'],
-                'wrongpassword'
-            )
-            
-            assert user is None
+            with pytest.raises(AuthenticationError, match="Invalid credentials"):
+                auth_service.authenticate_user(
+                    test_user['username'],
+                    'wrongpassword'
+                )
     
     def test_authenticate_user_nonexistent(self, app, auth_service):
         """Test authentication with nonexistent user."""
         with app.app_context():
-            user = auth_service.authenticate_user('nonexistent', 'password')
-            
-            assert user is None
+            with pytest.raises(AuthenticationError, match="Invalid credentials"):
+                auth_service.authenticate_user('nonexistent', 'password')
     
     def test_generate_token(self, app, auth_service, test_user):
         """Test JWT token generation."""

@@ -1,5 +1,5 @@
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from backend.database import db
 from backend.models.user import User
 
@@ -51,7 +51,8 @@ class AuthService:
         return user
 
     def generate_token(self, user_id):
-        exp = datetime.utcnow() + timedelta(hours=self.expiration_hours)
+        # FIX: Use timezone-aware datetime
+        exp = datetime.now(timezone.utc) + timedelta(hours=self.expiration_hours)
         return jwt.encode({"user_id": user_id, "exp": exp}, self.secret_key, algorithm=self.algorithm)
 
     def verify_token(self, token):
@@ -62,4 +63,5 @@ class AuthService:
             raise AuthenticationError("Invalid token")
 
     def get_user_by_id(self, user_id):
-        return User.query.get(user_id)
+        # FIX: Use db.session.get() instead of Query.get()
+        return db.session.get(User, user_id)

@@ -96,13 +96,15 @@ def auth_headers(auth_token):
 
 
 @pytest.fixture(scope='function')
-def test_category(app, category_service):
+def test_category(app, category_service, test_user):
     """Create a test category."""
     with app.app_context():
-        category = category_service.create_category({
-            'name': 'Test Category',
-            'description': 'Test description'
-        })
+        # FIX: Pass user_id, name, description in correct order
+        category = category_service.create_category(
+            test_user['id'],
+            'Test Category',
+            'Test description'
+        )
         db.session.commit()
         category_id = category.id
         category_name = category.name
@@ -117,16 +119,19 @@ def test_category(app, category_service):
 
 
 @pytest.fixture(scope='function')
-def test_task(app, task_service, category_service, test_category):
+def test_task(app, task_service, category_service, test_category, test_user):
     """Create a test task."""
     with app.app_context():
-        task = task_service.create_task({
-            'title': 'Test Task',
-            'description': 'Test description',
-            'category_id': test_category.id,
-            'priority': 'High',
-            'estimated_hours': 5.0
-        }, category_service)
+        # FIX: Call create_task with correct positional arguments
+        task = task_service.create_task(
+            test_user['id'],  # user_id
+            'Test Task',  # title
+            'Test description',  # description
+            2,  # priority (use integer)
+            5,  # hours
+            test_category.id,  # category_id
+            None  # due_date
+        )
         db.session.commit()
         task_id = task.id
         task_title = task.title
@@ -141,35 +146,43 @@ def test_task(app, task_service, category_service, test_category):
 
 
 @pytest.fixture(scope='function')
-def multiple_tasks(app, task_service, category_service, test_category):
+def multiple_tasks(app, task_service, category_service, test_category, test_user):
     """Create multiple test tasks with different priorities."""
     with app.app_context():
-        # High priority task
-        task1 = task_service.create_task({
-            'title': 'High Priority Task',
-            'category_id': test_category.id,
-            'priority': 'High',
-            'due_date': '2025-12-01',
-            'estimated_hours': 10.0
-        }, category_service)
+        from datetime import datetime
         
-        # Medium priority task
-        task2 = task_service.create_task({
-            'title': 'Medium Priority Task',
-            'category_id': test_category.id,
-            'priority': 'Medium',
-            'due_date': '2025-12-01',
-            'estimated_hours': 5.0
-        }, category_service)
+        # High priority task (priority = 1)
+        task1 = task_service.create_task(
+            test_user['id'],
+            'High Priority Task',
+            'High description',
+            1,  # priority
+            10,  # hours
+            test_category.id,
+            datetime(2025, 12, 1)  # due_date as datetime object
+        )
         
-        # Low priority task
-        task3 = task_service.create_task({
-            'title': 'Low Priority Task',
-            'category_id': test_category.id,
-            'priority': 'Low',
-            'due_date': '2025-12-15',
-            'estimated_hours': 2.0
-        }, category_service)
+        # Medium priority task (priority = 2)
+        task2 = task_service.create_task(
+            test_user['id'],
+            'Medium Priority Task',
+            'Medium description',
+            2,  # priority
+            5,  # hours
+            test_category.id,
+            datetime(2025, 12, 1)  # due_date as datetime object
+        )
+        
+        # Low priority task (priority = 3)
+        task3 = task_service.create_task(
+            test_user['id'],
+            'Low Priority Task',
+            'Low description',
+            3,  # priority
+            2,  # hours
+            test_category.id,
+            datetime(2025, 12, 15)  # due_date as datetime object
+        )
         
         db.session.commit()
         

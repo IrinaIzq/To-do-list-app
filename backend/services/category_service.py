@@ -11,7 +11,11 @@ class CategoryService:
     # Requerido por los tests
     CategoryValidationError = CategoryValidationError
 
-    def create_category(self, user_id, name, description):
+    def create_category(self, user_id, name, description=None):
+        """
+        FIX: Changed signature to match what routes.py is calling
+        Parameters are now positional: user_id, name, description
+        """
         if not name or not name.strip():
             raise CategoryValidationError("Name required")
 
@@ -31,8 +35,8 @@ class CategoryService:
     def get_all_categories(self, user_id):
         return Category.query.filter_by(user_id=user_id).all()
 
-    def update_category(self, category_id, name, description):
-        cat = Category.query.get(category_id)
+    def update_category(self, category_id, name, description=None):
+        cat = db.session.get(Category, category_id)
         if not cat:
             raise CategoryValidationError("Category not found")
 
@@ -45,7 +49,7 @@ class CategoryService:
         return cat
 
     def delete_category(self, category_id):
-        cat = Category.query.get(category_id)
+        cat = db.session.get(Category, category_id)
         if not cat:
             raise CategoryValidationError("Category not found")
 
