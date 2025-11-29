@@ -3,7 +3,7 @@
 **Generated**: November 2025  
 **Project**: To-Do List Manager Application  
 **Minimum Required Coverage**: 70%  
-**Actual Coverage**: 75.3%
+**Actual Coverage**: 88%
 
 
 ## Overall Coverage Summary
