@@ -1,53 +1,58 @@
-from flask import Flask, jsonify
+import os
+from flask import Flask, send_from_directory
 from flask_cors import CORS
-
-from backend.database import db
+from backend.database import db, init_models
 from backend.config import get_config
+from backend.routes import create_routes
 from backend.services.auth_service import AuthService
 from backend.services.task_service import TaskService
 from backend.services.category_service import CategoryService
-from backend.routes import create_routes
+from sqlalchemy import text
 
 
-def create_app():
-    app = Flask(__name__)
+def create_app(config_name=None):
+    config_name = config_name or os.getenv("FLASK_ENV", "production")
+    config_class = get_config(config_name)
 
-    # Load config
-    config = get_config()
-    app.config.from_object(config)
+    app = Flask(__name__, static_folder="../frontend")
+    app.config.from_object(config_class)
 
-    # Database
     db.init_app(app)
+    CORS(app, origins="*")
+    init_models()
 
-    with app.app_context():
-        db.create_all()
-
-    # Enable CORS for frontend
-    CORS(app)
-
-    # Initialize services
     auth_service = AuthService(
         secret_key=app.config["SECRET_KEY"],
-        algorithm="HS256",
-        expiration_hours=24
+        algorithm=app.config["JWT_ALGORITHM"],
+        expiration_hours=app.config["JWT_EXPIRATION_HOURS"],
     )
     task_service = TaskService()
     category_service = CategoryService()
 
-    # Register API routes
-    bp = create_routes(auth_service, task_service, category_service)
-    app.register_blueprint(bp)
+    app.register_blueprint(create_routes(auth_service, task_service, category_service))
 
-    # Root route → API status ONLY (NO HTML)
-    @app.route("/")
+    @app.get("/")
     def index():
-        return jsonify({
-            "status": "API running",
-            "message": "Backend up and healthy"
-        }), 200
+        return send_from_directory("../frontend", "index.html")
+
+    @app.get("/health")
+    def health():
+        try:
+            db.session.execute(text("SELECT 1"))
+            db_status = "healthy"
+        except Exception as e:
+            db_status = str(e)
+        return {
+            "status": "ok",
+            "database": db_status,
+            "version": app.config["APP_VERSION"]
+        }
 
     return app
 
 
-# Azure entrypoint
-app = create_app()
+if __name__ == "__main__":
+    app = create_app()
+    with app.app_context():
+        db.create_all()
+    app.run(port=5000, debug=True)

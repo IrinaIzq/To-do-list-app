@@ -1,40 +1,42 @@
 import os
 
-class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "supersecret")
-    JWT_ALGORITHM = "HS256"
-    JWT_EXPIRATION_HOURS = 24
-    APP_NAME = "To-Do Manager"
-    APP_VERSION = "2.0.0"
-    TESTING = False
+class BaseConfig:
+    SECRET_KEY = "dev-secret-key"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Default DB for dev - always provide a valid URI
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "sqlite:///dev.db"
-    )
 
-    CORS_ORIGINS = ["*"]
-
-
-class TestingConfig(Config):
+class TestingConfig(BaseConfig):
     TESTING = True
-    # In-memory database for tests
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
 
-class ProductionConfig(Config):
-    # In production, DATABASE_URL must be set or fall back to a file
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "sqlite:///production.db"
-    )
+class DevelopmentConfig(BaseConfig):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"
 
 
-def get_config(name):
+class ProductionConfig(BaseConfig):
+    DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///prod.db")
+
+
+def get_config(name: str = "default"):
+    """
+    Tests expect this function, and expect it to work with NO arguments.
+    """
     if name == "testing":
-        return TestingConfig
-    if name == "production":
-        return ProductionConfig
-    return Config
+        return TestingConfig()
+    elif name == "development":
+        return DevelopmentConfig()
+    elif name == "production":
+        return ProductionConfig()
+    else:
+        # default fallback
+        env = os.getenv("FLASK_ENV", "production")
+
+        if env == "development":
+            return DevelopmentConfig()
+        elif env == "testing":
+            return TestingConfig()
+        else:
+            return ProductionConfig()
