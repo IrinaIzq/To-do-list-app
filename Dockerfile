@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend
 COPY backend/ /app/backend/
 
-# Optional: copy frontend for static hosting only if required
+# Copy frontend
 COPY frontend/ /app/frontend/
 
 # Expose port for Azure
