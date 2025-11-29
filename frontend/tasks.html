@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Tasks</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<h2>To-Do Manager</h2>
+
+<p><button onclick="logout()">Logout</button></p>
+
+<h3>Create task</h3>
+<input id="task-title" placeholder="Task title">
+<input id="task-desc" placeholder="Description">
+<input id="task-priority" type="number" min="1" max="5" placeholder="Priority">
+<input id="task-hours" type="number" placeholder="Hours">
+<input id="task-category" type="number" placeholder="Category ID">
+<button onclick="createTask()">Add Task</button>
+
+<p id="task-msg"></p>
+
+<h3>Your tasks</h3>
+<ul id="task-list"></ul>
+
+<script src="js/tasks.js"></script>
+</body>
+</html>
