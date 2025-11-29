@@ -1,10 +1,13 @@
+"""
+Main Flask application with improved structure and monitoring.
+"""
 from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from prometheus_flask_exporter import PrometheusMetrics
-import os
 import logging
 from datetime import datetime
 from sqlalchemy import text
+import os
 
 from backend.database import db
 from backend.config import get_config
@@ -15,23 +18,29 @@ from backend.services.category_service import CategoryService
 
 
 def create_app(config_name='development'):
-    app = Flask(__name__, static_folder='../frontend', static_url_path='')
+
+    app = Flask(
+        __name__,
+        static_folder='../frontend',
+        static_url_path=''
+    )
 
     # Load config
     config_class = get_config(config_name)
     app.config.from_object(config_class)
 
-    # Init extensions
+    # Initialize DB
     db.init_app(app)
-    CORS(app, origins="*")
+    CORS(app, origins=app.config['CORS_ORIGINS'])
 
     # Prometheus
     if not app.config.get('TESTING', False):
         try:
             metrics = PrometheusMetrics(app)
-            metrics.info('app_info', 'Application info', version=app.config['APP_VERSION'])
+            metrics.info('app_info', 'Application info',
+                        version=app.config['APP_VERSION'])
         except Exception as e:
-            app.logger.warning(f'Failed to init Prometheus: {e}')
+            app.logger.warning(f'Failed to initialize Prometheus metrics: {e}')
 
     # Services
     auth_service = AuthService(
@@ -42,33 +51,47 @@ def create_app(config_name='development'):
     task_service = TaskService()
     category_service = CategoryService()
 
-    # API routes
-    app.register_blueprint(create_routes(auth_service, task_service, category_service))
+    # Routes
+    app.register_blueprint(
+        create_routes(auth_service, task_service, category_service)
+    )
 
-    # HEALTH CHECK
+    # Health check
     @app.route('/health')
     def health_check():
         try:
             db.session.execute(text('SELECT 1'))
             db_status = 'healthy'
         except Exception as e:
-            db_status = f'unhealthy: {e}'
+            db_status = f'unhealthy: {str(e)}'
+
         return jsonify({
             'status': 'healthy' if db_status == 'healthy' else 'degraded',
-            'database': db_status,
-            'environment': config_name,
+            'timestamp': datetime.utcnow().isoformat(),
             'version': app.config['APP_VERSION'],
-            'timestamp': datetime.utcnow().isoformat()
+            'database': db_status,
+            'environment': config_name
         })
 
-    # SERVE FRONTEND (THIS IS THE IMPORTANT PART)
+    # Serve frontend
     @app.route('/')
-    def serve_index():
+    def root():
         return send_from_directory('../frontend', 'index.html')
 
     @app.route('/<path:path>')
-    def serve_static(path):
+    def static_proxy(path):
         return send_from_directory('../frontend', path)
+
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({'error': 'Resource not found'}), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        app.logger.error(f'Internal error: {str(error)}')
+        return jsonify({'error': 'Internal server error'}), 500
 
     return app
 
