@@ -6,9 +6,10 @@ from backend.services.auth_service import AuthService
 from backend.services.category_service import CategoryService
 from backend.services.task_service import TaskService
 
-def create_app():
+def create_app(config_name="default"):
     app = Flask(__name__)
 
+    # The tests expect the DB to be in-memory ALWAYS
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     app.config["SECRET_KEY"] = "secret"
     app.config["JWT_ALGORITHM"] = "HS256"
@@ -32,6 +33,11 @@ def create_app():
     app.register_blueprint(
         create_routes(auth, category_service, task_service)
     )
+
+    # Add health check route (the tests need it)
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}, 200
 
     return app
 
