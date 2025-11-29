@@ -79,6 +79,11 @@
         button:active {
             transform: translateY(0);
         }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
         .link-button {
             text-align: center;
             margin-top: 15px;
@@ -143,6 +148,16 @@
             font-size: 14px;
             margin-bottom: 20px;
         }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #666;
+            max-height: 150px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +165,7 @@
         <h1>📝 To-Do Manager</h1>
         
         <div id="message"></div>
+        <div id="debugInfo" class="debug-info hidden"></div>
         
         <!-- Login Form -->
         <div id="loginSection">
@@ -162,7 +178,7 @@
                 <label for="loginPassword">Password</label>
                 <input type="password" id="loginPassword" placeholder="Enter your password">
             </div>
-            <button onclick="login()">Login</button>
+            <button id="loginBtn" onclick="login()">Login</button>
             <div class="link-button" onclick="showRegister()">Don't have an account? Register here</div>
         </div>
         
@@ -177,7 +193,7 @@
                 <label for="registerPassword">Password</label>
                 <input type="password" id="registerPassword" placeholder="Choose a password (min 6 chars)">
             </div>
-            <button onclick="register()">Register</button>
+            <button id="registerBtn" onclick="register()">Register</button>
             <div class="link-button" onclick="showLogin()">Already have an account? Login here</div>
         </div>
     </div>
@@ -248,6 +264,16 @@
 
     <script>
         let token = null;
+        let debugMode = false; // Set to true to see debug info
+
+        function debug(msg) {
+            if (debugMode) {
+                console.log(msg);
+                const debugDiv = document.getElementById('debugInfo');
+                debugDiv.classList.remove('hidden');
+                debugDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + msg + '<br>';
+            }
+        }
 
         function showMessage(msg, type, isApp = false) {
             const messageDiv = document.getElementById(isApp ? 'appMessage' : 'message');
@@ -256,7 +282,7 @@
             setTimeout(() => {
                 messageDiv.className = '';
                 messageDiv.textContent = '';
-            }, 3000);
+            }, 5000);
         }
 
         function showLogin() {
@@ -283,6 +309,7 @@
         async function register() {
             const username = document.getElementById('registerUsername').value.trim();
             const password = document.getElementById('registerPassword').value;
+            const btn = document.getElementById('registerBtn');
 
             if (!username || !password) {
                 showMessage('Please fill in all fields', 'error');
@@ -294,14 +321,38 @@
                 return;
             }
 
+            btn.disabled = true;
+            btn.textContent = 'Registering...';
+
+            debug('Attempting to register user: ' + username);
+
             try {
-                const response = await fetch('/register', {
+                const url = window.location.origin + '/register';
+                debug('POST to: ' + url);
+
+                const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ username, password })
                 });
 
-                const data = await response.json();
+                debug('Response status: ' + response.status);
+                
+                const contentType = response.headers.get('content-type');
+                debug('Response content-type: ' + contentType);
+
+                let data;
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                    debug('Response data: ' + JSON.stringify(data));
+                } else {
+                    const text = await response.text();
+                    debug('Response text (not JSON): ' + text.substring(0, 200));
+                    throw new Error('Server returned HTML instead of JSON. Check backend logs.');
+                }
 
                 if (response.ok) {
                     showMessage('Registration successful! Please login.', 'success');
@@ -312,31 +363,61 @@
                     showMessage(data.error || 'Registration failed', 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showMessage('Network error. Please try again.', 'error');
+                console.error('Registration error:', error);
+                debug('Error: ' + error.message);
+                showMessage('Network error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Register';
             }
         }
 
         async function login() {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
 
             if (!username || !password) {
                 showMessage('Please fill in all fields', 'error');
                 return;
             }
 
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+
+            debug('Attempting to login user: ' + username);
+
             try {
-                const response = await fetch('/login', {
+                const url = window.location.origin + '/login';
+                debug('POST to: ' + url);
+
+                const response = await fetch(url, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ username, password })
                 });
 
-                const data = await response.json();
+                debug('Response status: ' + response.status);
+
+                const contentType = response.headers.get('content-type');
+                debug('Response content-type: ' + contentType);
+
+                let data;
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                    debug('Response data: ' + JSON.stringify(data));
+                } else {
+                    const text = await response.text();
+                    debug('Response text (not JSON): ' + text.substring(0, 200));
+                    throw new Error('Server returned HTML instead of JSON. Check backend logs.');
+                }
 
                 if (response.ok && data.token) {
                     token = data.token;
+                    debug('Token received: ' + token.substring(0, 20) + '...');
                     showMessage('Login successful!', 'success');
                     document.getElementById('loginUsername').value = '';
                     document.getElementById('loginPassword').value = '';
@@ -345,8 +426,12 @@
                     showMessage(data.error || 'Login failed', 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showMessage('Network error. Please try again.', 'error');
+                console.error('Login error:', error);
+                debug('Error: ' + error.message);
+                showMessage('Network error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Login';
             }
         }
 
@@ -357,14 +442,20 @@
         }
 
         async function loadCategories() {
+            debug('Loading categories...');
             try {
-                const response = await fetch('/categories', {
+                const response = await fetch(window.location.origin + '/categories', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!response.ok) throw new Error('Failed to load categories');
+                if (!response.ok) {
+                    debug('Failed to load categories: ' + response.status);
+                    return;
+                }
 
                 const categories = await response.json();
+                debug('Categories loaded: ' + categories.length);
+                
                 const select = document.getElementById('taskCategory');
                 select.innerHTML = '<option value="">Select category...</option>';
                 
@@ -376,6 +467,7 @@
                 });
             } catch (error) {
                 console.error('Error loading categories:', error);
+                debug('Error loading categories: ' + error.message);
             }
         }
 
@@ -388,8 +480,10 @@
                 return;
             }
 
+            debug('Creating category: ' + name);
+
             try {
-                const response = await fetch('/categories', {
+                const response = await fetch(window.location.origin + '/categories', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -410,23 +504,29 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showMessage('Network error. Please try again.', 'error', true);
+                showMessage('Network error: ' + error.message, 'error', true);
             }
         }
 
         async function loadTasks() {
+            debug('Loading tasks...');
             try {
-                const response = await fetch('/tasks', {
+                const response = await fetch(window.location.origin + '/tasks', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!response.ok) throw new Error('Failed to load tasks');
+                if (!response.ok) {
+                    debug('Failed to load tasks: ' + response.status);
+                    return;
+                }
 
                 const tasks = await response.json();
+                debug('Tasks loaded: ' + tasks.length);
+                
                 const tasksList = document.getElementById('tasksList');
                 
                 if (tasks.length === 0) {
-                    tasksList.innerHTML = '<li style="text-align: center; color: #999;">No tasks yet. Create one above!</li>';
+                    tasksList.innerHTML = '<li style="text-align: center; color: #999; padding: 20px;">No tasks yet. Create one above!</li>';
                     return;
                 }
                 
@@ -445,6 +545,7 @@
                 });
             } catch (error) {
                 console.error('Error loading tasks:', error);
+                debug('Error loading tasks: ' + error.message);
             }
         }
 
@@ -466,8 +567,10 @@
                 return;
             }
 
+            debug('Creating task: ' + title);
+
             try {
-                const response = await fetch('/tasks', {
+                const response = await fetch(window.location.origin + '/tasks', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -497,18 +600,22 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showMessage('Network error. Please try again.', 'error', true);
+                showMessage('Network error: ' + error.message, 'error', true);
             }
         }
 
         // Check backend health on load
         window.onload = async function() {
+            debug('Page loaded, checking backend health...');
             try {
-                const response = await fetch('/health');
+                const response = await fetch(window.location.origin + '/health');
                 const data = await response.json();
                 console.log('Backend health:', data);
+                debug('Backend health: ' + JSON.stringify(data));
             } catch (error) {
                 console.error('Cannot connect to backend:', error);
+                debug('Cannot connect to backend: ' + error.message);
+                showMessage('Warning: Cannot connect to backend', 'error');
             }
         }
     </script>
