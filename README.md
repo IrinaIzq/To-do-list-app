@@ -1,5 +1,10 @@
 # To-Do List Manager
 
+![CI/CD Pipeline](https://github.com/IrinaIzq/To-do-list-app/actions/workflows/ci-cd.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen)
+![Python](https://img.shields.io/badge/python-3.10-blue)
+![License](https://img.shields.io/badge/license-Educational-orange)
+
 A simple task manager application that allows users to create, organize, and prioritize tasks.  
 Each task includes a title, description, category, due date, estimated hours, and status.  
 The app is built with **Python (Flask) for the backend**, **SQLite for persistent storage**, and **HTML/CSS/JavaScript for the frontend**.  
@@ -15,6 +20,7 @@ The app is built with **Python (Flask) for the backend**, **SQLite for persisten
 - Comprehensive test coverage (>70%)
 - Health check endpoints
 - SOLID principles and clean architecture
+- **Live Demo**: https://irina-todoapp-backend-eug6ghdxh2cra6du.westeurope-01.azurewebsites.net  ← AÑADIR ESTO
 
 ---
 
@@ -40,7 +46,7 @@ Git
 Running with Docker (Recommended)
 ````bash
 # Clone the repository
-git clone https://github.com/YOUR-USERNAME/todo-list-app.git
+https://github.com/IrinaIzq/To-do-list-app.git
 cd todo-list-app
 
 # Create environment file
@@ -56,12 +62,25 @@ docker-compose up -d
 # - Grafana: http://localhost:3000 (admin/admin)
 ````
 
+## 2. Deployed Application
+
+**Live URL**: https://irina-todoapp-backend-eug6ghdxh2cra6du.westeurope-01.azurewebsites.net
+
+**Quick Test:**
+1. Visit the live URL
+2. Click "Register" to create an account
+3. Login with your credentials
+4. Create a category (e.g., "Work")
+5. Create a task and test the status buttons (Start → Complete)
+
+**Health Check**: https://irina-todoapp-backend-eug6ghdxh2cra6du.westeurope-01.azurewebsites.net/health
+
 ---
 
-## 2. Development Setup
+## 3. Development Setup
 ### a. Clone and Setup Virtual Environment
 ````bash
-git clone https://github.com/YOUR-USERNAME/todo-list-app.git
+https://github.com/IrinaIzq/To-do-list-app.git
 cd todo-list-app
 
 # Create virtual environment
@@ -83,6 +102,8 @@ Create a .env file in the root directory:
 FLASK_ENV=development
 SECRET_KEY=your-secret-key-here
 DATABASE_URL=sqlite:///tasks.db
+
+# Note: For Azure deployment, use sqlite:///:memory: due to ephemeral storage
 
 # JWT Configuration
 JWT_EXPIRATION_HOURS=24
@@ -115,7 +136,7 @@ python -m http.server 8000
 
 ---
 
-## 3. Testing
+## 4. Testing
 ### a. Run All Tests
 ````bash
 # Run all tests with coverage
@@ -160,7 +181,7 @@ flake8 backend/ tests/ --max-line-length=100
 
 ---
 
-## 4. Docker Deployment
+## 5. Docker Deployment
 ### a. Build and Run
 ````bash
 # Build the image
@@ -204,7 +225,7 @@ docker-compose up -d --build
 
 ---
 
-## 5. CI/CD Pipeline
+## 6. CI/CD Pipeline
 The project uses GitHub Actions for automated CI/CD:
 ### a. Pipeline Stages
 - Lint - Code quality checks (Black, isort, Flake8)
@@ -219,15 +240,15 @@ The project uses GitHub Actions for automated CI/CD:
 ### c. Viewing Pipeline Status
 ````bash
 # View pipeline runs
-https://github.com/YOUR-USERNAME/todo-list-app/actions
+https://github.com/IrinaIzq/To-do-list-app/actions
 
 # Pipeline badge
-![CI/CD Pipeline](https://github.com/YOUR-USERNAME/todo-list-app/actions/workflows/ci-cd.yml/badge.svg)
+![CI/CD Pipeline](https://github.com/IrinaIzq/To-do-list-app/actions/workflows/ci-cd.yml/badge.svg)
 ````
 
 ---
 
-## 6. Monitoring
+## 7. Monitoring
 ### a. Health Check Endpoint
 ````bash
 curl http://localhost:5000/health
@@ -243,6 +264,9 @@ curl http://localhost:5000/health
 ````
 
 ### b. Prometheus Metrics
+**Note**: Prometheus metrics collection is currently configured but not active in the Azure deployment due to in-memory database limitations. The configuration is available in `monitoring/prometheus.yml` for local Docker Compose deployment.
+
+**For Local Development with Docker Compose:**
 Access metrics at: http://localhost:5000/metrics
 Key Metrics Tracked:
 - flask_http_request_total - Total HTTP requests by method, endpoint, status
@@ -266,7 +290,7 @@ Dashboard Panels:
 
 ---
 
-## 7. API Documentation
+## 8. API Documentation
 ### a. Authentication
 Register User:
 ````bash
@@ -323,7 +347,7 @@ Content-Type: application/json
 }
 ````
 
-Delete caegory:
+Delete category:
 ````http
 DELETE /categories/{id}
 ````
@@ -372,7 +396,7 @@ DELETE /tasks/{id}
 
 ---
 
-## 8. Architecture
+## 9. Architecture
 ### a. Tech Stack
 - **Backend:** Python (Flask), Flask-SQLAlchemy, Flask-CORS, PyJWT
 - **Database:** SQLite
