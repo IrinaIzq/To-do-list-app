@@ -9,7 +9,10 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from backend.app import create_app
-from backend.database import db, User, Category, Task
+from backend.database import db
+from backend.models.user import User
+from backend.models.task import Task
+from backend.models.category import Category
 from backend.services.auth_service import AuthService
 from backend.services.task_service import TaskService
 from backend.services.category_service import CategoryService
