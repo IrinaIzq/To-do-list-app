@@ -2,15 +2,13 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-# Import models so tests can import them directly from backend.database
-from backend.models.user import User
-from backend.models.category import Category
-from backend.models.task import Task
-
+# These imports will be resolved after models are defined
+User = None
+Category = None
+Task = None
 
 def init_models():
-    """
-    This function exists only so that tests can call init_models()
-    before creating tables.
-    """
-    pass
+    global User, Category, Task
+    from backend.models.user import User
+    from backend.models.category import Category
+    from backend.models.task import Task

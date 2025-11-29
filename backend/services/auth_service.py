@@ -1,82 +1,53 @@
-import datetime
-import jwt
-from werkzeug.security import generate_password_hash, check_password_hash
-
 from backend.database import db
 from backend.models.user import User
+import jwt
+from datetime import datetime, timedelta
 
-
-# Exceptions required by tests
 class AuthenticationError(Exception):
-    """Base authentication error"""
     pass
-
-
-class InvalidCredentialsError(AuthenticationError):
-    """Raised when password or email is wrong"""
-    pass
-
-
-class TokenExpiredError(AuthenticationError):
-    """Raised when JWT token is expired"""
-    pass
-
 
 class AuthService:
-    def __init__(self, secret_key, algorithm="HS256", expiration_hours=24):
+    def __init__(self, secret_key, algorithm, expiration_hours):
         self.secret_key = secret_key
         self.algorithm = algorithm
         self.expiration_hours = expiration_hours
 
+    def register_user(self, username, password):
+        if not username or not password:
+            raise AuthenticationError("Missing username or password")
 
-    # Registration
-    def register(self, email, password):
-        if not email or not password:
-            raise InvalidCredentialsError("Email and password are required")
+        if User.query.filter_by(username=username).first():
+            raise AuthenticationError("User already exists")
 
-        if User.query.filter_by(email=email).first():
-            raise InvalidCredentialsError("Email already registered")
+        user = User(username=username)
+        user.set_password(password)
 
-        hashed = generate_password_hash(password)
-        user = User(email=email, password=hashed)
         db.session.add(user)
         db.session.commit()
-
         return user
 
+    def authenticate_user(self, username, password):
+        user = User.query.filter_by(username=username).first()
+        if not user or not user.check_password(password):
+            raise AuthenticationError("Invalid credentials")
+        return user
 
-    # Login
-    def login(self, email, password):
-        user = User.query.filter_by(email=email).first()
-        if not user or not check_password_hash(user.password, password):
-            raise InvalidCredentialsError("Invalid credentials")
-
-        return self._generate_token(user.id)
-
-
-    # Token generation
-    def _generate_token(self, user_id):
-        expiration = datetime.datetime.utcnow() + datetime.timedelta(
-            hours=self.expiration_hours
-        )
+    def generate_token(self, user_id):
         payload = {
             "user_id": user_id,
-            "exp": expiration
+            "exp": datetime.utcnow() + timedelta(hours=self.expiration_hours)
         }
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-
-    # Token validation
     def verify_token(self, token):
         try:
             data = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
-        except jwt.ExpiredSignatureError:
-            raise TokenExpiredError("Token has expired")
-        except jwt.InvalidTokenError:
+            return data["user_id"]
+        except Exception:
             raise AuthenticationError("Invalid token")
 
-        user = User.query.get(data.get("user_id"))
+    def get_user_by_id(self, user_id):
+        user = User.query.get(user_id)
         if not user:
             raise AuthenticationError("User not found")
-
         return user
