@@ -9,7 +9,7 @@ class Config:
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Default DB for dev
+    # Default DB for dev - always provide a valid URI
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
         "sqlite:///dev.db"
@@ -20,11 +20,16 @@ class Config:
 
 class TestingConfig(Config):
     TESTING = True
+    # In-memory database for tests
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    # In production, DATABASE_URL must be set or fall back to a file
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL",
+        "sqlite:///production.db"
+    )
 
 
 def get_config(name):

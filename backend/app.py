@@ -51,10 +51,9 @@ def create_app(config_name=None):
     return app
 
 
-app = create_app()
-
-
+# Only create app instance when running directly, not during imports
 if __name__ == "__main__":
+    app = create_app()
     with app.app_context():
         db.create_all()
     app.run(port=5000, debug=True)
