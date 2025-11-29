@@ -18,12 +18,7 @@ from backend.services.category_service import CategoryService
 
 
 def create_app(config_name='development'):
-
-    app = Flask(
-        __name__,
-        static_folder='../frontend',    # carpeta relativa dentro del contenedor
-        static_url_path=''              # sirve estáticos desde la raíz
-    )
+    app = Flask(__name__, static_folder='../frontend', static_url_path='')
 
     # Load configuration
     config_class = get_config(config_name)
@@ -31,18 +26,17 @@ def create_app(config_name='development'):
 
     # Initialize extensions
     db.init_app(app)
-    CORS(app, origins=app.config.get('CORS_ORIGINS', '*'))
+    CORS(app, origins=app.config['CORS_ORIGINS'])
 
-    # Initialize Prometheus metrics ONLY if not testing
+    # Prometheus
     if not app.config.get('TESTING', False):
         try:
             metrics = PrometheusMetrics(app)
-            metrics.info('app_info', 'Application info',
-                         version=app.config['APP_VERSION'])
+            metrics.info('app_info', 'Application info', version=app.config['APP_VERSION'])
         except Exception as e:
             app.logger.warning(f'Failed to initialize Prometheus metrics: {e}')
 
-    # Initialize services
+    # Services
     auth_service = AuthService(
         secret_key=app.config['SECRET_KEY'],
         algorithm=app.config['JWT_ALGORITHM'],
@@ -51,15 +45,14 @@ def create_app(config_name='development'):
     task_service = TaskService()
     category_service = CategoryService()
 
-    # Register blueprints
+    # Routes
     app.register_blueprint(
         create_routes(auth_service, task_service, category_service)
     )
 
-    # Health check endpoint
+    # Health
     @app.route('/health')
     def health_check():
-        """Health check endpoint for monitoring."""
         try:
             db.session.execute(text('SELECT 1'))
             db_status = 'healthy'
@@ -74,45 +67,19 @@ def create_app(config_name='development'):
             'environment': config_name
         })
 
-    # ----------------------------
-    # SERVIR FRONTEND (INDEX + STATIC)
-    # ----------------------------
-    # La carpeta frontend está en /app/frontend dentro del contenedor.
-    # Usamos send_from_directory para servir index.html y los assets.
-    FRONTEND_FOLDER = os.path.abspath(os.path.join(app.root_path, '..', 'frontend'))
-
+    # Serve frontend
     @app.route('/')
     def root():
-        return send_from_directory(FRONTEND_FOLDER, 'index.html')
+        return send_from_directory('../frontend', 'index.html')
 
     @app.route('/<path:path>')
     def static_proxy(path):
-        # intenta servir archivos estáticos (js/css/img). Si no existen, devuelve 404.
-        return send_from_directory(FRONTEND_FOLDER, path)
-
-    # Error handlers
-    @app.errorhandler(404)
-    def not_found(error):
-        return jsonify({'error': 'Resource not found'}), 404
-
-    @app.errorhandler(500)
-    def internal_error(error):
-        db.session.rollback()
-        app.logger.error(f'Internal error: {str(error)}')
-        return jsonify({'error': 'Internal server error'}), 500
-
-    # Configure logging
-    if not app.debug:
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+        return send_from_directory('../frontend', path)
 
     return app
 
 
 def init_database(app):
-    """Initialize database tables."""
     with app.app_context():
         db.create_all()
         app.logger.info('Database tables created')
