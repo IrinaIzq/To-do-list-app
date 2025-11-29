@@ -1,3 +1,5 @@
+# Multi-stage Dockerfile for production deployment
+
 # Stage 1: Base Python image
 FROM python:3.10-slim AS base
 
@@ -31,5 +33,5 @@ RUN touch backend/__init__.py
 # Expose port 80 for Azure
 EXPOSE 80
 
-# Start the app using Gunicorn
+# Start the app using Gunicorn (must match backend.wsgi:app)
 CMD ["gunicorn", "-b", "0.0.0.0:80", "backend.wsgi:app"]
