@@ -1,39 +1,53 @@
 from backend.database import db
 from backend.models.category import Category
 
+
 class CategoryValidationError(Exception):
     pass
 
+
 class CategoryService:
 
-    def create_category(self, name, description):
-        if not name or not description:
-            raise CategoryValidationError("Missing fields")
+    # Requerido por los tests
+    CategoryValidationError = CategoryValidationError
 
-        if Category.query.filter_by(name=name).first():
-            raise CategoryValidationError("Category already exists")
+    def create_category(self, user_id, name, description):
+        if not name or not name.strip():
+            raise CategoryValidationError("Name required")
 
-        category = Category(name=name, description=description)
-        db.session.add(category)
+        existing = Category.query.filter_by(user_id=user_id, name=name).first()
+        if existing:
+            raise CategoryValidationError("Duplicate category")
+
+        cat = Category(
+            name=name.strip(),
+            description=description.strip() if description else None,
+            user_id=user_id,
+        )
+        db.session.add(cat)
         db.session.commit()
-        return category
+        return cat
 
-    def get_all_categories(self):
-        return Category.query.all()
+    def get_all_categories(self, user_id):
+        return Category.query.filter_by(user_id=user_id).all()
 
     def update_category(self, category_id, name, description):
-        category = Category.query.get(category_id)
-        if not category:
+        cat = Category.query.get(category_id)
+        if not cat:
             raise CategoryValidationError("Category not found")
 
-        category.name = name
-        category.description = description
+        if not name or not name.strip():
+            raise CategoryValidationError("Name required")
+
+        cat.name = name.strip()
+        cat.description = description.strip() if description else None
         db.session.commit()
-        return category
+        return cat
 
     def delete_category(self, category_id):
-        category = Category.query.get(category_id)
-        if not category:
+        cat = Category.query.get(category_id)
+        if not cat:
             raise CategoryValidationError("Category not found")
-        db.session.delete(category)
+
+        db.session.delete(cat)
         db.session.commit()

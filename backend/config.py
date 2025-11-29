@@ -1,25 +1,35 @@
 import os
 
-class BaseConfig:
-    APP_NAME = "To-Do Manager"
-    APP_VERSION = "2.0.0"
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
+class Config:
+    SECRET_KEY = os.getenv("SECRET_KEY", "supersecret")
     JWT_ALGORITHM = "HS256"
     JWT_EXPIRATION_HOURS = 24
+    APP_NAME = "To-Do Manager"
+    APP_VERSION = "2.0.0"
+    TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Default DB for dev
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL",
+        "sqlite:///dev.db"
+    )
+
     CORS_ORIGINS = ["*"]
 
-class DevelopmentConfig(BaseConfig):
-    DEBUG = True
-    TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///data.db")
 
-class ProductionConfig(BaseConfig):
-    DEBUG = False
-    TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///data.db")
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
-def get_config(name='development'):
-    if name == 'production':
+
+class ProductionConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+
+
+def get_config(name):
+    if name == "testing":
+        return TestingConfig
+    if name == "production":
         return ProductionConfig
-    return DevelopmentConfig
+    return Config

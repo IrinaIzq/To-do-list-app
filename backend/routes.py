@@ -1,147 +1,208 @@
 from flask import Blueprint, request, jsonify
-from backend.services.auth_service import AuthService, AuthenticationError
-from backend.services.category_service import CategoryService, CategoryValidationError
-from backend.services.task_service import TaskService, TaskValidationError, TaskNotFoundError
+from functools import wraps
 
-bp = Blueprint("api", __name__)
+from backend.services.auth_service import AuthService
+from backend.services.category_service import CategoryService
+from backend.services.task_service import TaskService
 
-auth: AuthService = None
-category_service: CategoryService = None
-task_service: TaskService = None
 
-def create_routes(auth_service, cat_service, t_service):
-    global auth, category_service, task_service
-    auth = auth_service
-    category_service = cat_service
-    task_service = t_service
+def create_routes(auth_service: AuthService, task_service: TaskService, category_service: CategoryService):
 
-    return bp
+    bp = Blueprint("api", __name__)
 
-#  AUTH 
+    # ----------------------------------------------------
+    # AUTH DECORATOR
+    # ----------------------------------------------------
+    def require_token(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            auth_header = request.headers.get("Authorization")
+            if not auth_header:
+                return jsonify({"error": "Token is missing"}), 401
 
-@bp.post("/auth/register")
-def register():
-    data = request.json
-    try:
-        user = auth.register_user(data.get("username"), data.get("password"))
-        return jsonify({"id": user.id}), 201
-    except AuthenticationError as e:
-        return jsonify({"error": str(e)}), 400
+            try:
+                scheme, token = auth_header.split()
+                if scheme.lower() != "bearer":
+                    raise Exception()
+            except Exception:
+                return jsonify({"error": "Missing or invalid token"}), 401
 
-@bp.post("/auth/login")
-def login():
-    data = request.json
-    try:
-        user = auth.authenticate_user(data.get("username"), data.get("password"))
-        token = auth.generate_token(user.id)
-        return jsonify({"token": token}), 200
-    except AuthenticationError as e:
-        return jsonify({"error": str(e)}), 401
+            try:
+                user_id = auth_service.verify_token(token)
+            except auth_service.AuthenticationError:
+                return jsonify({"error": "Invalid token"}), 401
 
-#  PROTECTED ENDPOINT 
+            request.user_id = user_id
+            return f(*args, **kwargs)
+        return wrapper
 
-@bp.get("/protected")
-def protected():
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    try:
-        auth.verify_token(token)
-        return jsonify({"message": "ok"}), 200
-    except AuthenticationError:
-        return jsonify({"error": "Unauthorized"}), 401
+    # ----------------------------------------------------
+    # AUTH
+    # ----------------------------------------------------
+    @bp.route("/register", methods=["POST"])
+    def register():
+        data = request.get_json() or {}
+        try:
+            auth_service.register_user(data.get("username"), data.get("password"))
+            return jsonify({"message": "User created successfully"}), 201
+        except auth_service.RegistrationError as e:
+            return jsonify({"error": str(e)}), 400
+        except auth_service.AuthenticationError as e:
+            return jsonify({"error": str(e)}), 400
 
-#  CATEGORIES 
+    @bp.route("/login", methods=["POST"])
+    def login():
+        data = request.get_json() or {}
+        try:
+            user = auth_service.authenticate_user(data.get("username"), data.get("password"))
+            token = auth_service.generate_token(user.id)
+            return jsonify({"token": token}), 200
+        except auth_service.AuthenticationError as e:
+            return jsonify({"error": str(e)}), 401
 
-@bp.post("/categories")
-def create_category():
-    data = request.json
-    try:
-        c = category_service.create_category(data["name"], data["description"])
-        return jsonify({"id": c.id}), 201
-    except CategoryValidationError as e:
-        return jsonify({"error": str(e)}), 400
+    # ----------------------------------------------------
+    # CATEGORY ENDPOINTS
+    # ----------------------------------------------------
+    @bp.route("/categories", methods=["POST"])
+    @require_token
+    def create_category():
+        data = request.get_json() or {}
+        try:
+            cat = category_service.create_category(
+                request.user_id,
+                data.get("name"),
+                data.get("description")
+            )
+            return jsonify({
+                "id": cat.id,
+                "name": cat.name,
+                "description": cat.description
+            }), 201
+        except category_service.CategoryValidationError as e:
+            msg = str(e)
+            if msg == "Duplicate category":
+                msg = "Category already exists"
+            return jsonify({"error": msg}), 400
 
-@bp.get("/categories")
-def list_categories():
-    cats = category_service.get_all_categories()
-    return jsonify([{"id": c.id, "name": c.name, "description": c.description} for c in cats])
+    @bp.route("/categories", methods=["GET"])
+    @require_token
+    def get_categories():
+        cats = category_service.get_all_categories(request.user_id)
+        return jsonify([
+            {"id": c.id, "name": c.name, "description": c.description}
+            for c in cats
+        ]), 200
 
-@bp.put("/categories/<int:id>")
-def update_category(id):
-    data = request.json
-    try:
-        c = category_service.update_category(id, data["name"], data["description"])
-        return jsonify({"id": c.id}), 200
-    except CategoryValidationError as e:
-        return jsonify({"error": str(e)}), 400
+    @bp.route("/categories/<int:cid>", methods=["PUT"])
+    @require_token
+    def update_category(cid):
+        data = request.get_json() or {}
+        try:
+            cat = category_service.update_category(cid, data.get("name"), data.get("description"))
+            return jsonify({
+                "id": cat.id,
+                "name": cat.name,
+                "description": cat.description
+            }), 200
+        except category_service.CategoryValidationError as e:
+            return jsonify({"error": str(e)}), 400
 
-@bp.delete("/categories/<int:id>")
-def delete_category(id):
-    try:
-        category_service.delete_category(id)
-        return jsonify({"deleted": True}), 200
-    except CategoryValidationError as e:
-        return jsonify({"error": str(e)}), 400
+    @bp.route("/categories/<int:cid>", methods=["DELETE"])
+    @require_token
+    def delete_category(cid):
+        try:
+            category_service.delete_category(cid)
+            return jsonify({"message": "Category deleted"}), 200
+        except category_service.CategoryValidationError as e:
+            return jsonify({"error": str(e)}), 400
 
-# TASKS 
+    # ----------------------------------------------------
+    # TASK ENDPOINTS
+    # ----------------------------------------------------
+    @bp.route("/tasks", methods=["POST"])
+    @require_token
+    def create_task():
+        data = request.get_json() or {}
 
-@bp.post("/tasks")
-def create_task():
-    data = request.json
-    try:
-        t = task_service.create_task(
-            data["title"], data["description"], data["priority"],
-            data["hours"], data["category_id"]
-        )
-        return jsonify({"id": t.id}), 201
-    except TaskValidationError as e:
-        return jsonify({"error": str(e)}), 400
+        # Tests expect this strict check
+        if data.get("category_id") is None:
+            return jsonify({"error": "category is required"}), 400
 
-@bp.get("/tasks")
-def list_tasks():
-    tasks = task_service.get_all_tasks()
-    return jsonify([
-        {
-            "id": t.id,
-            "title": t.title,
-            "description": t.description,
-            "priority": t.priority,
-            "hours": t.hours,
-            "category_id": t.category_id
-        }
-        for t in tasks
-    ])
+        try:
+            task = task_service.create_task(
+                request.user_id,
+                data.get("title"),
+                data.get("description"),
+                data.get("priority"),
+                data.get("hours"),
+                data.get("category_id"),
+                data.get("due_date")
+            )
+            return jsonify({"id": task.id, "title": task.title}), 201
+        except task_service.TaskValidationError as e:
+            return jsonify({"error": str(e)}), 400
 
-@bp.get("/tasks/<int:id>")
-def get_task(id):
-    try:
-        t = task_service.get_task(id)
-        return jsonify({
-            "id": t.id,
-            "title": t.title,
-            "description": t.description,
-            "priority": t.priority,
-            "hours": t.hours,
-            "category_id": t.category_id
-        })
-    except TaskNotFoundError:
-        return jsonify({"error": "Not found"}), 404
+    @bp.route("/tasks", methods=["GET"])
+    @require_token
+    def get_tasks():
+        tasks = task_service.get_tasks(request.user_id)
+        return jsonify([
+            {
+                "id": t.id,
+                "title": t.title,
+                "description": t.description,
+                "priority": t.priority,
+                "hours": t.hours,
+                "category_id": t.category_id
+            } for t in tasks
+        ]), 200
 
-@bp.put("/tasks/<int:id>")
-def update_task(id):
-    data = request.json
-    try:
-        t = task_service.update_task(
-            id, data["title"], data["description"], data["priority"],
-            data["hours"], data["category_id"]
-        )
-        return jsonify({"id": t.id}), 200
-    except (TaskNotFoundError, TaskValidationError) as e:
-        return jsonify({"error": str(e)}), 400
+    @bp.route("/tasks/<int:tid>", methods=["GET"])
+    @require_token
+    def get_task(tid):
+        try:
+            t = task_service.get_task(tid)
+            return jsonify({
+                "id": t.id,
+                "title": t.title,
+                "description": t.description,
+                "priority": t.priority,
+                "hours": t.hours,
+                "category_id": t.category_id
+            }), 200
+        except task_service.TaskNotFoundError:
+            return jsonify({"error": "Not found"}), 404
 
-@bp.delete("/tasks/<int:id>")
-def delete_task(id):
-    try:
-        task_service.delete_task(id)
-        return jsonify({"deleted": True}), 200
-    except TaskNotFoundError:
-        return jsonify({"error": "Not found"}), 404
+    @bp.route("/tasks/<int:tid>", methods=["PUT"])
+    @require_token
+    def update_task(tid):
+        data = request.get_json() or {}
+        try:
+            t = task_service.update_task(tid, **data)
+            return jsonify({"id": t.id, "title": t.title}), 200
+        except task_service.TaskNotFoundError:
+            return jsonify({"error": "Not found"}), 404
+
+    @bp.route("/tasks/<int:tid>", methods=["DELETE"])
+    @require_token
+    def delete_task(tid):
+        try:
+            task_service.delete_task(tid)
+            return jsonify({"message": "Task deleted"}), 200
+        except task_service.TaskNotFoundError:
+            return jsonify({"error": "Not found"}), 404
+
+    # ----------------------------------------------------
+    # HEALTH
+    # ----------------------------------------------------
+    @bp.route("/health", methods=["GET"])
+    def health():
+        # tests expect string "healthy" or "degraded"
+        try:
+            from backend.database import db
+            db.session.execute("SELECT 1")
+            return jsonify({"status": "healthy"}), 200
+        except Exception:
+            return jsonify({"status": "degraded"}), 200
+
+    return bp   # ⬅⬅⬅ CRUCIAL — si falta o se mueve, Flask peta
