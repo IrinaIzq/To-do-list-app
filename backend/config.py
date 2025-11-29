@@ -11,8 +11,9 @@ class Config:
     TESTING = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Always provide a valid default database URI
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///dev.db")
+    # For Azure: Use in-memory database (data will be lost on restart)
+    # This is because Azure Web Apps don't have persistent file storage for SQLite
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///:memory:")
     
     CORS_ORIGINS = ["*"]
 
@@ -22,15 +23,12 @@ class TestingConfig(Config):
     TESTING = True
     # Use in-memory database for tests
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    # Override with env var if set
-    if os.getenv("DATABASE_URL"):
-        SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
 
 
 class ProductionConfig(Config):
     """Production configuration"""
-    # In production, use environment variable or fallback
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///production.db")
+    # For Azure production: use in-memory SQLite or set DATABASE_URL to PostgreSQL/MySQL
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///:memory:")
 
 
 def get_config(name):
