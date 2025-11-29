@@ -266,10 +266,10 @@ class TestDatabaseModels(unittest.TestCase):
                 title='Test Task',
                 description='Test description',
                 category_id=category.id,
-                hours=5,  # FIX: Use 'hours' instead of 'estimated_hours'
-                priority=1,  # FIX: Use integer instead of string
+                hours=5,  
+                priority=1,  
                 status='Pending',
-                user_id=1  # FIX: Add user_id which is required
+                user_id=1 
             )
             db.session.add(task)
             db.session.commit()

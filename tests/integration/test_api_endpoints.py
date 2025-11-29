@@ -139,7 +139,6 @@ class TestTaskEndpoints:
             },
             headers=auth_headers
         )
-        # FIX: This should return 400 because category_id is required
         assert response.status_code == 400
         assert b'category is required' in response.data
     
@@ -212,7 +211,6 @@ class TestTaskEndpoints:
             headers=auth_headers
         )
         assert response.status_code == 400
-        # FIX: Match the actual error message
         assert b'title required' in response.data
     
     def test_create_task_without_category(self, client, auth_headers):
@@ -235,7 +233,6 @@ class TestTaskEndpoints:
             },
             headers=auth_headers
         )
-        # FIX: Since invalid strings map to default, this should succeed
         assert response.status_code == 201
     
     def test_create_task_with_negative_hours(self, client, auth_headers, test_category):

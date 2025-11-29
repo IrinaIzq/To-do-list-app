@@ -8,7 +8,6 @@ from backend.models.task import Task
 from backend.models.category import Category
 
 def init_models():
-    # Nothing required — models are imported above
     pass
 
 __all__ = ["db", "User", "Task", "Category", "init_models"]

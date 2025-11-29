@@ -13,8 +13,7 @@ class RegistrationError(Exception):
 
 
 class AuthService:
-
-    # Exponer excepciones como atributos de clase (los tests lo requieren)
+    # Required by tests
     AuthenticationError = AuthenticationError
     RegistrationError = RegistrationError
 
@@ -51,7 +50,6 @@ class AuthService:
         return user
 
     def generate_token(self, user_id):
-        # FIX: Use timezone-aware datetime
         exp = datetime.now(timezone.utc) + timedelta(hours=self.expiration_hours)
         return jwt.encode({"user_id": user_id, "exp": exp}, self.secret_key, algorithm=self.algorithm)
 
@@ -63,5 +61,4 @@ class AuthService:
             raise AuthenticationError("Invalid token")
 
     def get_user_by_id(self, user_id):
-        # FIX: Use db.session.get() instead of Query.get()
         return db.session.get(User, user_id)

@@ -219,7 +219,7 @@
 </head>
 <body>
     <div class="container" id="authContainer">
-        <h1>📝 To-Do Manager</h1>
+        <h1>To-Do List Manager</h1>
         
         <div id="message"></div>
         
@@ -546,10 +546,10 @@
                         </div>
                         ${task.description ? `<p style="color: #666; margin: 8px 0; font-size: 14px;">${task.description}</p>` : ''}
                         <div class="task-actions">
-                            ${status !== 'In Progress' ? `<button class="btn-start" onclick="updateTaskStatus(${task.id}, 'In Progress')">▶️ Start</button>` : ''}
-                            ${status !== 'Completed' ? `<button class="btn-complete" onclick="updateTaskStatus(${task.id}, 'Completed')">✓ Complete</button>` : ''}
-                            ${status !== 'Pending' ? `<button class="btn-pending" onclick="updateTaskStatus(${task.id}, 'Pending')">↻ Reset</button>` : ''}
-                            <button class="btn-delete" onclick="deleteTask(${task.id})">🗑️</button>
+                            ${status !== 'In Progress' ? `<button class="btn-start" onclick="updateTaskStatus(${task.id}, 'In Progress')">Start</button>` : ''}
+                            ${status !== 'Completed' ? `<button class="btn-complete" onclick="updateTaskStatus(${task.id}, 'Completed')">Complete</button>` : ''}
+                            ${status !== 'Pending' ? `<button class="btn-pending" onclick="updateTaskStatus(${task.id}, 'Pending')">Reset</button>` : ''}
+                            <button class="btn-delete" onclick="deleteTask(${task.id})">Delete</button>
                         </div>
                     `;
                     tasksList.appendChild(li);

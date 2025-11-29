@@ -12,9 +12,8 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
 
     bp = Blueprint("api", __name__)
 
-    # ----------------------------------------------------
+
     # AUTH DECORATOR
-    # ----------------------------------------------------
     def require_token(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -38,9 +37,8 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
             return f(*args, **kwargs)
         return wrapper
 
-    # ----------------------------------------------------
+
     # AUTH
-    # ----------------------------------------------------
     @bp.route("/register", methods=["POST"])
     def register():
         try:
@@ -83,9 +81,8 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
             print(traceback.format_exc())
             return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-    # ----------------------------------------------------
+
     # CATEGORY ENDPOINTS
-    # ----------------------------------------------------
     @bp.route("/categories", methods=["POST"])
     @require_token
     def create_category():
@@ -159,9 +156,7 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
             print(traceback.format_exc())
             return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-    # ----------------------------------------------------
     # TASK ENDPOINTS
-    # ----------------------------------------------------
     @bp.route("/tasks", methods=["POST"])
     @require_token
     def create_task():
@@ -285,9 +280,8 @@ def create_routes(auth_service: AuthService, task_service: TaskService, category
             print(traceback.format_exc())
             return jsonify({"error": f"Internal server error: {str(e)}"}), 500
 
-    # ----------------------------------------------------
+
     # HEALTH
-    # ----------------------------------------------------
     @bp.route("/health", methods=["GET"])
     def health():
         try:

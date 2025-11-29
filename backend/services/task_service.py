@@ -17,10 +17,7 @@ class TaskService:
     TaskNotFoundError = TaskNotFoundError
 
     def create_task(self, user_id, title, description, priority, hours, category_id, due_date=None):
-        """
-        FIX: Changed signature to match what routes.py is calling
-        Parameters are now positional in the correct order
-        """
+
         if not title or not title.strip():
             raise TaskValidationError("title required")
 

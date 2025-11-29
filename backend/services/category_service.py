@@ -8,14 +8,11 @@ class CategoryValidationError(Exception):
 
 class CategoryService:
 
-    # Requerido por los tests
+    # Required by tests
     CategoryValidationError = CategoryValidationError
 
     def create_category(self, user_id, name, description=None):
-        """
-        FIX: Changed signature to match what routes.py is calling
-        Parameters are now positional: user_id, name, description
-        """
+        
         if not name or not name.strip():
             raise CategoryValidationError("Name required")
 
