@@ -21,11 +21,13 @@ from backend.services.category_service import CategoryService
 @pytest.fixture(scope='function')
 def app():
     """Create and configure a test application instance."""
-    app = create_app('testing')
+    # Create app with testing config
+    test_app = create_app('testing')
     
-    with app.app_context():
+    # Create application context
+    with test_app.app_context():
         db.create_all()
-        yield app
+        yield test_app
         db.session.remove()
         db.drop_all()
 
@@ -73,7 +75,7 @@ def test_user(app, auth_service):
     with app.app_context():
         user = auth_service.register_user(username, password)
         db.session.commit()
-        user_id = user.id  # Store ID inside context
+        user_id = user.id
     
     return {
         'id': user_id,
@@ -99,7 +101,6 @@ def auth_headers(auth_token):
 def test_category(app, category_service, test_user):
     """Create a test category."""
     with app.app_context():
-        # FIX: Pass user_id, name, description in correct order
         category = category_service.create_category(
             test_user['id'],
             'Test Category',
@@ -109,7 +110,6 @@ def test_category(app, category_service, test_user):
         category_id = category.id
         category_name = category.name
     
-    # Return a simple object with the data
     class CategoryData:
         def __init__(self, id, name):
             self.id = id
@@ -119,24 +119,22 @@ def test_category(app, category_service, test_user):
 
 
 @pytest.fixture(scope='function')
-def test_task(app, task_service, category_service, test_category, test_user):
+def test_task(app, task_service, test_category, test_user):
     """Create a test task."""
     with app.app_context():
-        # FIX: Call create_task with correct positional arguments
         task = task_service.create_task(
-            test_user['id'],  # user_id
-            'Test Task',  # title
-            'Test description',  # description
-            2,  # priority (use integer)
-            5,  # hours
-            test_category.id,  # category_id
-            None  # due_date
+            test_user['id'],
+            'Test Task',
+            'Test description',
+            2,
+            5,
+            test_category.id,
+            None
         )
         db.session.commit()
         task_id = task.id
         task_title = task.title
     
-    # Return a simple object
     class TaskData:
         def __init__(self, id, title):
             self.id = id
@@ -146,47 +144,42 @@ def test_task(app, task_service, category_service, test_category, test_user):
 
 
 @pytest.fixture(scope='function')
-def multiple_tasks(app, task_service, category_service, test_category, test_user):
+def multiple_tasks(app, task_service, test_category, test_user):
     """Create multiple test tasks with different priorities."""
     with app.app_context():
         from datetime import datetime
         
-        # High priority task (priority = 1)
         task1 = task_service.create_task(
             test_user['id'],
             'High Priority Task',
             'High description',
-            1,  # priority
-            10,  # hours
+            1,
+            10,
             test_category.id,
-            datetime(2025, 12, 1)  # due_date as datetime object
+            datetime(2025, 12, 1)
         )
         
-        # Medium priority task (priority = 2)
         task2 = task_service.create_task(
             test_user['id'],
             'Medium Priority Task',
             'Medium description',
-            2,  # priority
-            5,  # hours
+            2,
+            5,
             test_category.id,
-            datetime(2025, 12, 1)  # due_date as datetime object
+            datetime(2025, 12, 1)
         )
         
-        # Low priority task (priority = 3)
         task3 = task_service.create_task(
             test_user['id'],
             'Low Priority Task',
             'Low description',
-            3,  # priority
-            2,  # hours
+            3,
+            2,
             test_category.id,
-            datetime(2025, 12, 15)  # due_date as datetime object
+            datetime(2025, 12, 15)
         )
         
         db.session.commit()
-        
-        # Store IDs inside context
         task_ids = [task1.id, task2.id, task3.id]
     
     return task_ids

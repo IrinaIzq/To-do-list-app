@@ -11,16 +11,19 @@ from sqlalchemy import text
 
 
 def create_app(config_name=None):
+    """Application factory pattern - create and configure the Flask app"""
     config_name = config_name or os.getenv("FLASK_ENV", "production")
     config_class = get_config(config_name)
 
     app = Flask(__name__, static_folder="../frontend")
     app.config.from_object(config_class)
 
+    # Initialize extensions
     db.init_app(app)
     CORS(app, origins="*")
     init_models()
 
+    # Create services
     auth_service = AuthService(
         secret_key=app.config["SECRET_KEY"],
         algorithm=app.config["JWT_ALGORITHM"],
@@ -29,12 +32,15 @@ def create_app(config_name=None):
     task_service = TaskService()
     category_service = CategoryService()
 
+    # Register blueprints
     app.register_blueprint(create_routes(auth_service, task_service, category_service))
 
+    # Static file route
     @app.get("/")
     def index():
         return send_from_directory("../frontend", "index.html")
 
+    # Health check route
     @app.get("/health")
     def health():
         try:
@@ -51,6 +57,7 @@ def create_app(config_name=None):
     return app
 
 
+# Only run when executing this file directly (not during imports/tests)
 if __name__ == "__main__":
     app = create_app()
     with app.app_context():
