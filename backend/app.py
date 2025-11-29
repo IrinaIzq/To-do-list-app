@@ -6,6 +6,7 @@ from flask_cors import CORS
 from prometheus_flask_exporter import PrometheusMetrics
 import logging
 from datetime import datetime
+from sqlalchemy import text
 
 from backend.database import db
 from backend.config import get_config
@@ -64,8 +65,7 @@ def create_app(config_name='development'):
     def health_check():
         """Health check endpoint for monitoring."""
         try:
-            # Check database connection
-            db.session.execute('SELECT 1')
+            db.session.execute(text('SELECT 1'))
             db_status = 'healthy'
         except Exception as e:
             db_status = f'unhealthy: {str(e)}'
